@@ -20,16 +20,17 @@ namespace tieba
             label1.Text = bd.init();
             textBox1.Text = "ksbe74906888@163.com";
             textBox2.Text = "zxj654321";
-            button1.Text = "获取验证码";
-            button2.Text = "校验验证码";
-            button3.Text = "一键签到";
-            button4.Text = "IE打开";
-            button5.Text = "登录";
-
+            button1.Text = "1获取验证码";
+            button2.Text = "2校验验证码";
+            button3.Text = "5一键签到";
+            button4.Text = "4IE打开";
+            button5.Text = "3登录";
+            button6.Text = "6重置";
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
+            label1.Text = textBox1.Text;
             if (bd.isgetcodeString(textBox1.Text))
                 pictureBox1.Image = bd.getCNCode();
             else
@@ -38,7 +39,8 @@ namespace tieba
 
         private void button2_Click(object sender, EventArgs e)
         {
-            bd.setCNCode(textBox3.Text);
+            if (bd.setCNCode(textBox3.Text))
+                label1.Text = bd.error;
         }
 
         private void button3_Click(object sender, EventArgs e)
@@ -57,6 +59,12 @@ namespace tieba
                 label1.Text = "登录成功";
             else
                 label1.Text = "登录失败";
+        }
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            bd = new baidu();
+            label1.Text = bd.init();
         }
     }
 }

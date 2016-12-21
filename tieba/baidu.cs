@@ -21,8 +21,9 @@ namespace tieba
 {
     public class baidu
     {
-        string codeString;
-        string vcodetype;
+        private string codeString = string.Empty;
+        private string verifycode = string.Empty;
+        private string vcodetype;
         //private HttpWebResponse response;
         private string token;
         private string rsakey;
@@ -30,6 +31,7 @@ namespace tieba
         private string cookies;
         private string verifyStr;
         private string uid;
+        public string error;
         private List<string> like = new List<string>();
         public CookieContainer cookie = new CookieContainer();
         public baidu()
@@ -70,14 +72,12 @@ namespace tieba
                    CookieContainer = cookie,
                    ResultCookieType = ResultCookieType.CookieContainer
                });
-
-            string responseFromServer = httpResult.Html;
             var json0 = new JavaScriptSerializer().
-                DeserializeObject(responseFromServer)
+                DeserializeObject(httpResult.Html)
                 as Dictionary<string, object>;
             var j1 = json0["data"] as Dictionary<string, object>;
             token = j1["token"] as string;
-            url = "https://passport.baidu.com/v2/getpublickey?apiver=v3";
+            url = "https://passport.baidu.com/v2/getpublickey?";
             nvc = new NameValueCollection
             {
                 {"apiver", "v3"},
@@ -93,9 +93,8 @@ namespace tieba
                    CookieContainer = cookie,
                    ResultCookieType = ResultCookieType.CookieContainer
                });
-            responseFromServer = httpResult.Html;
             var json1 = new JavaScriptSerializer().
-                DeserializeObject(responseFromServer)
+                DeserializeObject(httpResult.Html)
                 as Dictionary<string, object>;
             var errno = json1["errno"] as string;
             if (errno != "0") return "获取key失败";
@@ -111,15 +110,15 @@ namespace tieba
             var url = "https://passport.baidu.com/v2/api/?logincheck&";
             var nvc = new NameValueCollection
             {
-                {"logincheck","" },
+                //{"logincheck","" },
                 {"token",token},
                 {"tpl","pp" },
-                {"ariver","v3" },
+                {"apiver","v3" },
                 {"tt",DateTime.Now.Ticks.ToString () },
                 {"username", username},
                 {"isphone","false" },
                 { "sub_source","leadsetpwd"},
-                {"callback","cb" },
+                {"callback","bd__cbs__29t9z0" },
             };
             var httpResult = new HttpHelper().GetHtml(
                 new HttpItem()
@@ -129,17 +128,20 @@ namespace tieba
                     CookieContainer = cookie,
                     ResultCookieType = ResultCookieType.CookieContainer
                 });
-            var str = httpResult.Html.Replace("cb(", "");
+            var str = httpResult.Html.Replace("bd__cbs__29t9z0(", "");
             str = str.Remove(str.Length - 1, 1);
             var json1 = new JavaScriptSerializer().
                 DeserializeObject(str)
                 as Dictionary<string, object>;
-            if (!json1.ContainsKey ("data")) return false;
             var j1 = json1["data"] as Dictionary<string, object>;
-            
-            codeString = j1["codeString"] as string;
-            vcodetype = j1["vcodetype"] as string;
-            return (codeString != null && codeString != string.Empty);
+            if (!j1.ContainsKey("codeString") || j1["codeString"] == null)
+                return false;
+            codeString = j1["codeString"].ToString();
+            if (j1.ContainsKey("vcodetype"))
+                vcodetype = j1["vcodetype"].ToString();
+            else
+                vcodetype = string.Empty;
+            return !string.IsNullOrEmpty(codeString);
         }
         public Image getCNCode()
         {
@@ -162,17 +164,16 @@ namespace tieba
         }
         public bool setCNCode(string input)
         {
-            var url = "https://passport.baidu.com/v2/?";
-
+            var url = "https://passport.baidu.com/v2/?checkvcode&";
+            verifycode = HttpUtility.HtmlEncode(input);
             var nvc = new NameValueCollection
             {
                 {"apiver", "v3"},
-                {"checkvcode", ""},
                 {"token", token},
                 {"tpl", "pp"},
                 {"tt", DateTime.Now.Ticks.ToString()},
                 {"codestring",codeString },
-                {"verifycode",input },
+                {"verifycode",verifycode },
             };
             var httpResult = new HttpHelper().GetHtml(
                 new HttpItem()
@@ -184,9 +185,15 @@ namespace tieba
                 });
             if (httpResult.StatusCode.Equals(HttpStatusCode.OK))
             {
+                error = "验证成功";
                 return true;
             }
-            return false;
+            else
+            {
+                if (httpResult.RedirectUrl.Contains("error"))
+                    error = "验证码出错";
+                return false;
+            }
         }
         public Image GetValCode()
         {
@@ -270,6 +277,7 @@ namespace tieba
                  {"token", token},
                  {"isPhone","false" },
                  {"tpl", "pp"},
+                 //{"subpro","" },
                  {"tt", DateTime.Now.Ticks.ToString()},
                  {"u", "https://passport.baidu.com/"},
                  {"isPhone", "false"},
@@ -278,7 +286,8 @@ namespace tieba
                  {"rsakey", rsakey},
                  {"crypttype", "12"},
                  {"ppui_logintime", "111111"},
-                 {"verifycode","" },
+                 {"verifycode",verifycode },
+                 {"codestring",codeString },
                  {"username", username},
                  {"password", RSAHelper.RSAEncrypt(publickey,password)},
             };
@@ -294,11 +303,12 @@ namespace tieba
                 ResultCookieType = ResultCookieType.CookieContainer
             });
             cookies = httpResult.Cookie;
+            if (string.IsNullOrEmpty(cookies)) return false;
             return httpResult.StatusCode.Equals(HttpStatusCode.OK);
         }
         public void getPSTM()
         {
-            string url = "http://www.baidu.com";
+            string url = "https://www.baidu.com";
             var result = new HttpHelper().GetHtml(
                 new HttpItem
                 {
@@ -317,13 +327,13 @@ namespace tieba
                     return;
                 }
             }
-
         }
         public string signall()
         {
             string result = string.Empty;
             getPSTM();
-            getLike();
+            if (!getLike())
+                return error;
             foreach (var one in like)
             {
                 sign(one);
@@ -351,7 +361,11 @@ namespace tieba
             var json = new JavaScriptSerializer().
                 DeserializeObject(result.Html)
                 as Dictionary<string, object>;
-            if ((json["errno"] as object).ToString() != "0") return false;
+            if ((json["errno"] as object).ToString() != "0")
+            {
+                error = json["errmsg"].ToString();
+                return false;
+            }
             var j1 = json["data"] as Dictionary<string, object>;
             var j2 = j1["info"] as object[];
             foreach (var temp in j2)
