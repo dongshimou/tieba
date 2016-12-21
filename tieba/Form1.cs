@@ -7,12 +7,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-
+using tieba;
 namespace tieba
 {
     public partial class Form1 : Form
     {
-        private baidu bd;
+        public delegate void MessageHandler(string msg);
+        public baidu bd;
         public Form1()
         {
             InitializeComponent();
@@ -26,8 +27,15 @@ namespace tieba
             button4.Text = "4IE打开";
             button5.Text = "3登录";
             button6.Text = "6重置";
+            button7.Text = "7发帖";
+            button8.Text = "8回帖";
+            bd.SignMessage += new MessageHandler(Getsignmessage);
         }
 
+        private void Getsignmessage(string msg)
+        {
+            label1.Text = msg;
+        }
         private void button1_Click(object sender, EventArgs e)
         {
             label1.Text = textBox1.Text;
@@ -50,6 +58,7 @@ namespace tieba
 
         private void button4_Click(object sender, EventArgs e)
         {
+            //System.Diagnostics.Process.Start("http://tieba.baidu.com/");
             HttpHelper.StartIe("http://tieba.baidu.com/", bd.cookie);
         }
 
@@ -65,6 +74,18 @@ namespace tieba
         {
             bd = new baidu();
             label1.Text = bd.init();
+        }
+
+        private void button7_Click(object sender, EventArgs e)
+        {
+            Form2 f2=new Form2();
+            f2.Show();
+        }
+
+        private void button8_Click(object sender, EventArgs e)
+        {
+            Form3 f3=new Form3();
+            f3.Show();
         }
     }
 }

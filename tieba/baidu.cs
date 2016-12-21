@@ -15,6 +15,7 @@ using System.Web.Script.Serialization;
 using System.Security.Cryptography;
 using System.Web;
 using System.Drawing;
+using System.Net.Http;
 using System.Threading;
 using tieba;
 namespace tieba
@@ -23,17 +24,18 @@ namespace tieba
     {
         private string codeString = string.Empty;
         private string verifycode = string.Empty;
-        private string vcodetype;
+        private string vcodetype = string.Empty;
         //private HttpWebResponse response;
-        private string token;
-        private string rsakey;
-        private string publickey;
-        private string cookies;
-        private string verifyStr;
-        private string uid;
-        public string error;
+        private string token { get; set; }
+        private string rsakey { get; set; }
+        private string publickey { get; set; }
+        private string cookies { get; set; }
+        private string verifyStr { get; set; }
+        private string pstm { get; set; }
+        public string error { get; set; }
         private List<string> like = new List<string>();
         public CookieContainer cookie = new CookieContainer();
+        public event Form1.MessageHandler SignMessage;
         public baidu()
         {
         }
@@ -323,7 +325,7 @@ namespace tieba
             {
                 if (str.Contains("PSTM"))
                 {
-                    uid = str.Remove(0, str.IndexOf("PSTM", StringComparison.Ordinal) + 5);
+                    pstm = str.Remove(0, str.IndexOf("PSTM", StringComparison.Ordinal) + 5);
                     return;
                 }
             }
@@ -337,7 +339,7 @@ namespace tieba
             foreach (var one in like)
             {
                 sign(one);
-                Thread.Sleep(1000);
+                Thread.Sleep(500);
             }
             result = "签到完成";
             return result;
@@ -348,7 +350,7 @@ namespace tieba
             //uid = DateTime.Now.Ticks.ToString();
             var nvc = new NameValueCollection
             {
-                {"t",uid },
+                {"t",pstm },
             };
             var result = new HttpHelper().GetHtml(
                 new HttpItem
@@ -405,6 +407,28 @@ namespace tieba
                     ResultCookieType = ResultCookieType.CookieContainer,
                     Postdata = HttpHelper.DataToString(info)
                 });
+            SignMessage?.Invoke(ba);
+        }
+
+        public void getBar(string bar)
+        {
+            var url = "http://tieba.baidu.com/f?";
+            var info = new NameValueCollection
+            {
+                {"kw", HttpUtility.HtmlEncode(bar)},
+                {"ie", "utf-8"},
+            };
+            var HttpResult=new HttpHelper().GetHtml(
+                new HttpItem
+                {
+                    URL = url+HttpHelper.DataToString(info),
+                    Method = "GET",
+                    CookieContainer = cookie,
+                    ResultCookieType = ResultCookieType.CookieContainer
+                });
+            /*var pageData;
+            var user;
+            var froum;*/
         }
     }
 }
