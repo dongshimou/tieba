@@ -23,13 +23,13 @@ namespace tieba
         {
             if (bd.post(bd.barname, textBox4.Text, textBox2.Text))
             {
-                pictureBox1.Image=bd.replaycode();
+                pictureBox1.Image=bd.GetPostCode();
             }
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
-            if (bd.setreplaycode(textBox3.Text.Trim()))
+            if (bd.SetPostCode(textBox3.Text.Trim()))
             {
                 if (bd.codepost(textBox3.Text.Trim(), bd.barname, textBox4.Text, textBox2.Text))
                 {

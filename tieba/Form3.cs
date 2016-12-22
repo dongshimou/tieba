@@ -24,17 +24,13 @@ namespace tieba
             bd.Gettid(textBox1.Text);
             if (bd.replay(bd.barname, textBox2.Text))
             {
-                pictureBox1.Image = bd.replaycode();
-            }
-            else
-            {
-                this.Hide();
+                pictureBox1.Image = bd.GetPostCode();
             }
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
-            if (bd.setreplaycode(textBox3.Text.Trim()))
+            if (bd.SetPostCode(textBox3.Text.Trim()))
             {
                 if (bd.codereplay(textBox3.Text.Trim(),bd.barname,textBox2.Text))
                 {

@@ -33,7 +33,6 @@ namespace tieba
         private string codeString = string.Empty;
         private string verifycode = string.Empty;
         private string vcodetype = string.Empty;
-        //private HttpWebResponse response;
         private string token { get; set; }
         private string rsakey { get; set; }
         private string publickey { get; set; }
@@ -43,7 +42,6 @@ namespace tieba
         public string error { get; set; }
         private List<string> like = new List<string>();
         public CookieContainer cookie = new CookieContainer();
-        public event Form1.MessageHandler SignMessage;
         public baidu()
         {
         }
@@ -153,7 +151,7 @@ namespace tieba
                 vcodetype = string.Empty;
             return !string.IsNullOrEmpty(codeString);
         }
-        public Image GetCnCode()
+        public Image GetLoginCode()
         {
             var url = "https://passport.baidu.com/cgi-bin/genimage?" + codeString;
             var httpResult = new HttpHelper().GetHtml(
@@ -172,7 +170,7 @@ namespace tieba
             else
                 return null;
         }
-        public bool SetCnCode(string input)
+        public bool SetLoginCode(string input)
         {
             var url = "https://passport.baidu.com/v2/?checkvcode&";
             verifycode = HttpUtility.HtmlEncode(input);
@@ -287,7 +285,6 @@ namespace tieba
                  {"token", token},
                  {"isPhone","false" },
                  {"tpl", "pp"},
-                 //{"subpro","" },
                  {"tt", DateTime.Now.Ticks.ToString()},
                  {"u", "https://passport.baidu.com/"},
                  {"isPhone", "false"},
@@ -316,7 +313,7 @@ namespace tieba
             if (string.IsNullOrEmpty(cookies)) return false;
             return httpResult.StatusCode.Equals(HttpStatusCode.OK);
         }
-        public void GetPstm()
+        public void GetPSTM()
         {
             string url = "https://www.baidu.com";
             var result = new HttpHelper().GetHtml(
@@ -338,55 +335,7 @@ namespace tieba
                 }
             }
         }
-        public string Signall(int t)
-        {
-            string result = string.Empty;
-            GetPstm();
-            if (!GetLike())
-                return error;
-            foreach (var one in like)
-            {
-                Sign(one);
-                Thread.Sleep(1000 * t);
-            }
-            result = "签到完成";
-            return result;
-        }
-        public bool GetLike()
-        {
-            string url = "http://tieba.baidu.com/p/getLikeForum?";
-            //uid = DateTime.Now.Ticks.ToString();
-            var nvc = new NameValueCollection
-            {
-                {"t",pstm },
-            };
-            var result = new HttpHelper().GetHtml(
-                new HttpItem
-                {
-                    URL = url + HttpHelper.DataToString(nvc),
-                    Method = "GET",
-                    CookieContainer = cookie,
-                    ResultCookieType = ResultCookieType.CookieContainer
-                });
-            var json = new JavaScriptSerializer().
-                DeserializeObject(result.Html)
-                as Dictionary<string, object>;
-            if ((json["errno"] as object).ToString() != "0")
-            {
-                error = json["errmsg"].ToString();
-                return false;
-            }
-            var j1 = json["data"] as Dictionary<string, object>;
-            var j2 = j1["info"] as object[];
-            foreach (var temp in j2)
-            {
-                var one = temp as Dictionary<string, object>;
-                like.Add(one["forum_name"] as string);
-            }
-            return true;
-        }
-
-        public Image replaycode()
+        public Image GetPostCode()
         {
             var url = "http://tieba.baidu.com/cgi-bin/genimg?" + replaycodestr + "&t=0.6";
             var httpResult = new HttpHelper().GetHtml(
@@ -405,8 +354,7 @@ namespace tieba
             else
                 return null;
         }
-
-        public bool setreplaycode(string input)
+        public bool SetPostCode(string input)
         {
             var url = "http://tieba.baidu.com/f/commit/commonapi/checkVcode";
             var info = new NameValueCollection
@@ -430,7 +378,6 @@ namespace tieba
                 as Dictionary<string, object>;
             return obj["anti_valve_err_no"].ToString() == "0";
         }
-
         public bool codereplay(string vcode, string bar, string content)
         {
             var url = "http://tieba.baidu.com/f/commit/post/add";
@@ -467,7 +414,6 @@ namespace tieba
                 as Dictionary<string, object>;
             return obj["err_code"].ToString() == "0";
         }
-
         public bool codepost(string vcode, string bar, string title, string content)
         {
             var url = "http://tieba.baidu.com/f/commit/thread/add";
@@ -587,10 +533,10 @@ namespace tieba
             var obj = new JavaScriptSerializer().
                 DeserializeObject(result.Html)
                 as Dictionary<string, object>;
-            obj = obj["data"] as Dictionary<string, object>;
-            obj = obj["vcode"] as Dictionary<string, object>;
-            if (obj["need_vcode"].ToString() == "1")
+            if (obj["err_code"].ToString() == "40")
             {
+                obj = obj["data"] as Dictionary<string, object>;
+                obj = obj["vcode"] as Dictionary<string, object>;
                 replaycodestr = obj["captcha_vcode_str"].ToString();
                 replaycodetype = obj["captcha_code_type"].ToString();
                 return true;
@@ -627,24 +573,67 @@ namespace tieba
                     ResultCookieType = ResultCookieType.CookieContainer,
                     Postdata = HttpHelper.DataToString(info)
                 });
-            SignMessage?.Invoke(ba);
         }
-
-        public uint getTime_t()
+        public string Signall()
+        {
+            string result = string.Empty;
+            GetPSTM();
+            if (!GetLike())
+                return error;
+            foreach (var one in like)
+            {
+                Sign(one);
+                Thread.Sleep(3000);
+            }
+            result = "签到完成";
+            return result;
+        }
+        public bool GetLike()
+        {
+            string url = "http://tieba.baidu.com/p/getLikeForum?";
+            //uid = getTime_t().ToString ();
+            var nvc = new NameValueCollection
+            {
+                {"t",pstm },
+            };
+            var result = new HttpHelper().GetHtml(
+                new HttpItem
+                {
+                    URL = url + HttpHelper.DataToString(nvc),
+                    Method = "GET",
+                    CookieContainer = cookie,
+                    ResultCookieType = ResultCookieType.CookieContainer
+                });
+            var json = new JavaScriptSerializer().
+                DeserializeObject(result.Html)
+                as Dictionary<string, object>;
+            if ((json["errno"] as object).ToString() != "0")
+            {
+                error = json["errmsg"].ToString();
+                return false;
+            }
+            var j1 = json["data"] as Dictionary<string, object>;
+            var j2 = j1["info"] as object[];
+            foreach (var temp in j2)
+            {
+                var one = temp as Dictionary<string, object>;
+                like.Add(one["forum_name"] as string);
+            }
+            return true;
+        }
+        private uint getTime_t()
         {
             var startTime = new DateTime(1970, 1, 1, 0, 0, 0, 0);
             var currTime = DateTime.Now - startTime;
             uint time_t = Convert.ToUInt32(Math.Abs(currTime.TotalMilliseconds));
             return time_t;
         }
-
         public void Gettid(string address)
         {
             var total = address.Split('/');
             tid = total[total.Length - 1];
         }
-
-        public void GetBarInfo(string bar)
+        public bool GetBarInfo(string bar)
         {
             var url = "http://tieba.baidu.com/f?";
             var info = new NameValueCollection
@@ -660,6 +649,7 @@ namespace tieba
                     CookieContainer = cookie,
                     ResultCookieType = ResultCookieType.CookieContainer
                 });
+            if (HttpResult.Html.Length < 10001) return false;
             string text = HttpResult.Html.Remove(10000);
             //(?<=script).*(?=script)
             Regex rx = new Regex(@"(?<=tbs).*(\})",
@@ -691,8 +681,11 @@ namespace tieba
                     break;
                 }
             }
+            if (string.IsNullOrEmpty(tbs) ||
+                string.IsNullOrEmpty(uid) ||
+                string.IsNullOrEmpty(fid))
+                return false;
+            else return true;
         }
-
-
     }
 }
