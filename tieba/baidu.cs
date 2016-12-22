@@ -22,6 +22,14 @@ namespace tieba
 {
     public class baidu
     {
+        private string replaycodestr = string.Empty;
+        private string replaycodetype = string.Empty;
+        public string barname { get; set; }
+        private string vcodemd5 = string.Empty;
+        private string tbs = string.Empty;
+        private string fid = string.Empty;
+        private string uid = string.Empty;
+        private string tid = string.Empty;
         private string codeString = string.Empty;
         private string verifycode = string.Empty;
         private string vcodetype = string.Empty;
@@ -39,7 +47,7 @@ namespace tieba
         public baidu()
         {
         }
-        public string init()
+        public string Init()
         {
             string url = "https://passport.baidu.com/v2/api/?getapi&";
             var nvc = new NameValueCollection
@@ -107,7 +115,7 @@ namespace tieba
             rsakey = json1["key"] as string;
             return "初始化成功";
         }
-        public bool isgetcodeString(string username)
+        public bool IsgetcodeString(string username)
         {
             var url = "https://passport.baidu.com/v2/api/?logincheck&";
             var nvc = new NameValueCollection
@@ -145,7 +153,7 @@ namespace tieba
                 vcodetype = string.Empty;
             return !string.IsNullOrEmpty(codeString);
         }
-        public Image getCNCode()
+        public Image GetCnCode()
         {
             var url = "https://passport.baidu.com/cgi-bin/genimage?" + codeString;
             var httpResult = new HttpHelper().GetHtml(
@@ -164,7 +172,7 @@ namespace tieba
             else
                 return null;
         }
-        public bool setCNCode(string input)
+        public bool SetCnCode(string input)
         {
             var url = "https://passport.baidu.com/v2/?checkvcode&";
             verifycode = HttpUtility.HtmlEncode(input);
@@ -268,7 +276,7 @@ namespace tieba
             }
             return false;
         }
-        public bool login(string username, string password)
+        public bool Login(string username, string password)
         {
             var url = "https://passport.baidu.com/v2/api/?login";
             var info = new NameValueCollection
@@ -308,7 +316,7 @@ namespace tieba
             if (string.IsNullOrEmpty(cookies)) return false;
             return httpResult.StatusCode.Equals(HttpStatusCode.OK);
         }
-        public void getPSTM()
+        public void GetPstm()
         {
             string url = "https://www.baidu.com";
             var result = new HttpHelper().GetHtml(
@@ -330,21 +338,21 @@ namespace tieba
                 }
             }
         }
-        public string signall()
+        public string Signall(int t)
         {
             string result = string.Empty;
-            getPSTM();
-            if (!getLike())
+            GetPstm();
+            if (!GetLike())
                 return error;
             foreach (var one in like)
             {
-                sign(one);
-                Thread.Sleep(500);
+                Sign(one);
+                Thread.Sleep(1000 * t);
             }
             result = "签到完成";
             return result;
         }
-        public bool getLike()
+        public bool GetLike()
         {
             string url = "http://tieba.baidu.com/p/getLikeForum?";
             //uid = DateTime.Now.Ticks.ToString();
@@ -377,7 +385,219 @@ namespace tieba
             }
             return true;
         }
-        public void sign(string ba)
+
+        public Image replaycode()
+        {
+            var url = "http://tieba.baidu.com/cgi-bin/genimg?" + replaycodestr + "&t=0.6";
+            var httpResult = new HttpHelper().GetHtml(
+                new HttpItem
+                {
+                    URL = url,
+                    Method = "GET",
+                    CookieContainer = cookie,
+                    ResultCookieType = ResultCookieType.CookieContainer
+                });
+            if (httpResult.StatusCode.Equals(HttpStatusCode.OK))
+            {
+
+                return Image.FromStream(new MemoryStream(httpResult.ResultByte));
+            }
+            else
+                return null;
+        }
+
+        public bool setreplaycode(string input)
+        {
+            var url = "http://tieba.baidu.com/f/commit/commonapi/checkVcode";
+            var info = new NameValueCollection
+            {
+                { "captcha_vcode_str",replaycodestr },
+                { "captcha_code_type",replaycodetype},
+                {"captcha_input_str",input },
+                {"fid",fid },
+            };
+            var httpResult = new HttpHelper().GetHtml(
+                new HttpItem
+                {
+                    URL = url,
+                    Method = "POST",
+                    CookieContainer = cookie,
+                    Postdata = HttpHelper.DataToString(info),
+                    ResultCookieType = ResultCookieType.CookieContainer
+                });
+            var obj = new JavaScriptSerializer().
+                DeserializeObject(httpResult.Html)
+                as Dictionary<string, object>;
+            return obj["anti_valve_err_no"].ToString() == "0";
+        }
+
+        public bool codereplay(string vcode, string bar, string content)
+        {
+            var url = "http://tieba.baidu.com/f/commit/post/add";
+            var info = new NameValueCollection
+            {
+                 {"ie", "utf-8"},
+                 {"kw", bar},
+                 {"fid", fid},
+                 {"tid", tid},
+                 {"vcode_md5", replaycodestr},
+                 {"floor_num", "0"},
+                 {"rich_text","1"},
+                 {"tbs",tbs},
+                 {"content",content},
+                 {"lp_type", "1"},
+                 {"lp_sub_type", "1"},
+                 {"repostid", null},
+                 {"talk_type", null},
+                 {"vcode", vcode},
+                 {"tag","11" },
+                 {"__type__","reply" },
+            };
+            var result = new HttpHelper().GetHtml(
+                new HttpItem
+                {
+                    URL = url,
+                    Method = "POST",
+                    Postdata = HttpHelper.DataToString(info),
+                    CookieContainer = cookie,
+                    ResultCookieType = ResultCookieType.CookieContainer
+                });
+            var obj = new JavaScriptSerializer().
+                DeserializeObject(result.Html)
+                as Dictionary<string, object>;
+            return obj["err_code"].ToString() == "0";
+        }
+
+        public bool codepost(string vcode, string bar, string title, string content)
+        {
+            var url = "http://tieba.baidu.com/f/commit/thread/add";
+            var info = new NameValueCollection
+            {
+                {"ie", "utf-8"},
+                {"kw", bar},
+                {"fid", fid},
+                {"tid", "0"},
+                {"vcode_md5", replaycodestr},
+                {"floor_num", "0"},
+                {"rich_text", "1"},
+                {"tbs", tbs},
+                {"content", content},
+                {"title", title},
+                {"lp_type", "1"},
+                {"lp_sub_type", "1"},
+                {"repostid", null},
+                {"talk_type", null},
+                {"new_vcode", "1"},
+                {"tag", "11"},
+                {"vcode",vcode },
+                {"__type__", "thread"},
+            };
+            var result = new HttpHelper().GetHtml(
+                new HttpItem
+                {
+                    URL = url,
+                    Method = "POST",
+                    Postdata = HttpHelper.DataToString(info),
+                    CookieContainer = cookie,
+                    ResultCookieType = ResultCookieType.CookieContainer
+                });
+            var obj = new JavaScriptSerializer().
+                    DeserializeObject(result.Html)
+                as Dictionary<string, object>;
+            return (obj["err_code"].ToString() == "0");
+        }
+        public bool post(string bar, string title, string content)
+        {
+            replaycodestr = string.Empty;
+            var url = "http://tieba.baidu.com/f/commit/thread/add";
+            var info = new NameValueCollection
+            {
+                {"ie", "utf-8"},
+                {"kw", bar},
+                {"fid", fid},
+                {"tid", "0"},
+                {"vcode_md5", replaycodestr},
+                {"floor_num", "0"},
+                {"rich_text", "1"},
+                {"tbs", tbs},
+                {"content", content},
+                {"title", title},
+                {"lp_type", "1"},
+                {"lp_sub_type", "1"},
+                {"repostid", null},
+                {"talk_type", null},
+                {"new_vcode", "1"},
+                {"tag", "11"},
+                {"__type__", "thread"},
+            };
+            var result = new HttpHelper().GetHtml(
+                new HttpItem
+                {
+                    URL = url,
+                    Method = "POST",
+                    Postdata = HttpHelper.DataToString(info),
+                    CookieContainer = cookie,
+                    ResultCookieType = ResultCookieType.CookieContainer
+                });
+            var obj = new JavaScriptSerializer().
+                    DeserializeObject(result.Html)
+                as Dictionary<string, object>;
+            if (obj["err_code"].ToString() == "40")
+            {
+                obj = obj["data"] as Dictionary<string, object>;
+                obj = obj["vcode"] as Dictionary<string, object>;
+                replaycodestr = obj["captcha_vcode_str"].ToString();
+                replaycodetype = obj["captcha_code_type"].ToString();
+                return true;
+            }
+            return false;
+        }
+        public bool replay(string bar, string content)
+        {
+            replaycodestr = string.Empty;
+            var url = "http://tieba.baidu.com/f/commit/post/add";
+            var info = new NameValueCollection
+            {
+                 {"ie", "utf-8"},
+                 {"kw", bar},
+                 {"fid", fid},
+                 {"tid", tid},
+                 {"vcode_md5", replaycodestr},
+                 {"floor_num", "0"},
+                 {"rich_text","1"},
+                 {"tbs",tbs},
+                 {"content",content},
+                 {"lp_type", "1"},
+                 {"lp_sub_type", "1"},
+                 {"repostid", null},
+                 {"talk_type", null},
+                 {"new_vcode", "1"},
+                 {"tag","11" },
+                 {"__type__","reply" },
+            };
+            var result = new HttpHelper().GetHtml(
+                new HttpItem
+                {
+                    URL = url,
+                    Method = "POST",
+                    Postdata = HttpHelper.DataToString(info),
+                    CookieContainer = cookie,
+                    ResultCookieType = ResultCookieType.CookieContainer
+                });
+            var obj = new JavaScriptSerializer().
+                DeserializeObject(result.Html)
+                as Dictionary<string, object>;
+            obj = obj["data"] as Dictionary<string, object>;
+            obj = obj["vcode"] as Dictionary<string, object>;
+            if (obj["need_vcode"].ToString() == "1")
+            {
+                replaycodestr = obj["captcha_vcode_str"].ToString();
+                replaycodetype = obj["captcha_code_type"].ToString();
+                return true;
+            }
+            return false;
+        }
+        public void Sign(string ba)
         {
             var url = "http://tieba.baidu.com/dc/common/tbs";//&
             var result = new HttpHelper().GetHtml(
@@ -410,7 +630,21 @@ namespace tieba
             SignMessage?.Invoke(ba);
         }
 
-        public void getBar(string bar)
+        public uint getTime_t()
+        {
+            var startTime = new DateTime(1970, 1, 1, 0, 0, 0, 0);
+            var currTime = DateTime.Now - startTime;
+            uint time_t = Convert.ToUInt32(Math.Abs(currTime.TotalMilliseconds));
+            return time_t;
+        }
+
+        public void Gettid(string address)
+        {
+            var total = address.Split('/');
+            tid = total[total.Length - 1];
+        }
+
+        public void GetBarInfo(string bar)
         {
             var url = "http://tieba.baidu.com/f?";
             var info = new NameValueCollection
@@ -418,17 +652,47 @@ namespace tieba
                 {"kw", HttpUtility.HtmlEncode(bar)},
                 {"ie", "utf-8"},
             };
-            var HttpResult=new HttpHelper().GetHtml(
+            var HttpResult = new HttpHelper().GetHtml(
                 new HttpItem
                 {
-                    URL = url+HttpHelper.DataToString(info),
+                    URL = url + HttpHelper.DataToString(info),
                     Method = "GET",
                     CookieContainer = cookie,
                     ResultCookieType = ResultCookieType.CookieContainer
                 });
-            /*var pageData;
-            var user;
-            var froum;*/
+            string text = HttpResult.Html.Remove(10000);
+            //(?<=script).*(?=script)
+            Regex rx = new Regex(@"(?<=tbs).*(\})",
+          RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            Match tbsmatch = rx.Match(text);
+            string value = tbsmatch.Value;
+            value = value.Replace('"', ' ');
+            value = value.Replace('}', ' ');
+            value = value.Replace('\'', ' ');
+            value = value.Replace(':', ' ');
+            tbs = value.Trim();
+
+            rx = new Regex(@"(?<='id':).*(,)",
+                RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            MatchCollection matches = rx.Matches(text);
+            bool first = true;
+            foreach (Match match in matches)
+            {
+                string id = match.Value;
+                id = id.Replace(',', ' ');
+                if (first)
+                {
+                    first = false;
+                    uid = id.Trim();
+                }
+                else
+                {
+                    fid = id.Trim();
+                    break;
+                }
+            }
         }
+
+
     }
 }

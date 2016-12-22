@@ -14,11 +14,15 @@ namespace tieba
     {
         public delegate void MessageHandler(string msg);
         public baidu bd;
+        private Form2 f2;
+        private Form3 f3;
         public Form1()
         {
             InitializeComponent();
             bd = new baidu();
-            label1.Text = bd.init();
+            
+            
+            label1.Text = bd.Init();
             textBox1.Text = "ksbe74906888@163.com";
             textBox2.Text = "zxj654321";
             button1.Text = "1获取验证码";
@@ -39,21 +43,23 @@ namespace tieba
         private void button1_Click(object sender, EventArgs e)
         {
             label1.Text = textBox1.Text;
-            if (bd.isgetcodeString(textBox1.Text))
-                pictureBox1.Image = bd.getCNCode();
+            if (bd.IsgetcodeString(textBox1.Text))
+                pictureBox1.Image = bd.GetCnCode();
             else
                 label1.Text = "不需要验证码";
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
-            if (bd.setCNCode(textBox3.Text))
+            if (bd.SetCnCode(textBox3.Text))
                 label1.Text = bd.error;
         }
 
         private void button3_Click(object sender, EventArgs e)
         {
-            label1.Text = bd.signall();
+            label1.Text = "正在签到，请等待";
+            //2s签到一个吧
+            label1.Text = bd.Signall(2);
         }
 
         private void button4_Click(object sender, EventArgs e)
@@ -64,7 +70,7 @@ namespace tieba
 
         private void button5_Click(object sender, EventArgs e)
         {
-            if (bd.login(textBox1.Text, textBox2.Text))
+            if (bd.Login(textBox1.Text, textBox2.Text))
                 label1.Text = "登录成功";
             else
                 label1.Text = "登录失败";
@@ -73,19 +79,28 @@ namespace tieba
         private void button6_Click(object sender, EventArgs e)
         {
             bd = new baidu();
-            label1.Text = bd.init();
+            label1.Text = bd.Init();
         }
 
         private void button7_Click(object sender, EventArgs e)
         {
-            Form2 f2=new Form2();
+            bd.barname = textBox4.Text.Trim();
+            bd.GetBarInfo(bd.barname);
+            f2 = new Form2(ref bd);
             f2.Show();
         }
 
         private void button8_Click(object sender, EventArgs e)
         {
-            Form3 f3=new Form3();
+            bd.barname=textBox4.Text.Trim();
+            bd.GetBarInfo(bd.barname);
+            f3 = new Form3(ref bd);
             f3.Show();
+        }
+
+        private void button9_Click(object sender, EventArgs e)
+        {
+            bd.GetBarInfo("python");
         }
     }
 }

@@ -150,7 +150,8 @@ namespace tieba
         private void SetEncoding(HttpItem item, HttpResult result, byte[] ResponseByte)
         {
             //是否返回Byte类型数据
-            if (item.ResultType == ResultType.Byte) result.ResultByte = ResponseByte;
+            //if (item.ResultType == ResultType.Byte) //注释防止百度验证码bug
+                result.ResultByte = ResponseByte;
             //从这里开始我们要无视编码了
             if (encoding == null)
             {
