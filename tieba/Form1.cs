@@ -36,7 +36,7 @@ namespace tieba
         private void button1_Click(object sender, EventArgs e)
         {
             label1.Text = textBox1.Text;
-            if (bd.IsgetcodeString(textBox1.Text.Trim ()))
+            if (bd.IsgetcodeString(textBox1.Text.Trim()))
                 pictureBox1.Image = bd.GetLoginCode();
             else
                 label1.Text = "不需要验证码";
@@ -49,13 +49,15 @@ namespace tieba
         }
         private void thread_signall()
         {
-            label1.Text=bd.Signall();
+            bd.Signall();
         }
         private void button3_Click(object sender, EventArgs e)
         {
             label1.Text = "后台正在签到，请勿其他操作";
-            Thread t = new Thread(new ThreadStart(thread_signall));
-            t.Start();
+            //Thread t = new Thread(new ThreadStart(thread_signall));
+            //t.Start();
+
+            label1.Text = bd.Signall();
         }
 
         private void button4_Click(object sender, EventArgs e)
@@ -94,7 +96,7 @@ namespace tieba
 
         private void button8_Click(object sender, EventArgs e)
         {
-            bd.barname=textBox4.Text.Trim();
+            bd.barname = textBox4.Text.Trim();
             if (bd.GetBarInfo(bd.barname))
             {
                 f3 = new Form3(ref bd);
@@ -104,6 +106,13 @@ namespace tieba
             {
                 label1.Text = "获取贴吧信息失败，稍后重试";
             }
+        }
+        private  void Form1_Closing(object sender, EventArgs e)
+        {
+            //this.WindowState = FormWindowState.Minimized;
+            //this.Visible = true;
+            this.Hide();
+            return;
         }
     }
 }
