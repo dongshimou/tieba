@@ -22,18 +22,27 @@ namespace tieba
         private void button1_Click(object sender, EventArgs e)
         {
             user.Add(new Form1());
-            listBox1.Items.Add("账号_"+user.Count.ToString());
+            listBox1.Items.Add("账号_" + user.Count.ToString());
         }
 
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
+            //var c = listBox1.SelectedIndex;
+            //user[listBox1.SelectedIndex].Show();
+        }
+
+        private void listBox1_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
             var c = listBox1.SelectedIndex;
             user[listBox1.SelectedIndex].Show();
         }
-
         private void button2_Click(object sender, EventArgs e)
         {
-            user[listBox1.SelectedIndex].Hide();
+            var index = listBox1.SelectedIndex;
+            listBox1.Items.RemoveAt(index);
+            user[index].Close();
+            if (index > 0)
+                listBox1.SelectedIndex = index - 1;
         }
     }
 }

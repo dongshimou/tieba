@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using tieba;
-using System.Threading;
 namespace tieba
 {
     public partial class Form1 : Form
@@ -32,6 +31,7 @@ namespace tieba
             button6.Text = "6重置";
             button7.Text = "7发帖";
             button8.Text = "8回帖";
+            //this.ControlBox = false;
         }
         private void button1_Click(object sender, EventArgs e)
         {
@@ -54,10 +54,9 @@ namespace tieba
         private void button3_Click(object sender, EventArgs e)
         {
             label1.Text = "后台正在签到，请勿其他操作";
-            //Thread t = new Thread(new ThreadStart(thread_signall));
-            //t.Start();
-
-            label1.Text = bd.Signall();
+            Thread t = new Thread(new ThreadStart(thread_signall));
+            t.Start();
+            //label1.Text = bd.Signall();
         }
 
         private void button4_Click(object sender, EventArgs e)
@@ -107,12 +106,17 @@ namespace tieba
                 label1.Text = "获取贴吧信息失败，稍后重试";
             }
         }
-        private  void Form1_Closing(object sender, EventArgs e)
+        private void Form1_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            e.Cancel = true;
+        }
+        
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            this.ShowInTaskbar = false;
             //this.WindowState = FormWindowState.Minimized;
-            //this.Visible = true;
+            e.Cancel = true;
             this.Hide();
-            return;
         }
     }
 }

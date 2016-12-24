@@ -543,7 +543,7 @@ namespace tieba
             }
             return false;
         }
-        public void Sign(string ba)
+        public string Sign(string bar)
         {
             var url = "http://tieba.baidu.com/dc/common/tbs";//&
             var result = new HttpHelper().GetHtml(
@@ -561,7 +561,7 @@ namespace tieba
             var info = new NameValueCollection
             {
                 {"ie","utf-8" },
-                {"kw", ba},
+                {"kw", bar},
                 {"tbs",tbs },
             };
             result = new HttpHelper().GetHtml(
@@ -573,6 +573,7 @@ namespace tieba
                     ResultCookieType = ResultCookieType.CookieContainer,
                     Postdata = HttpHelper.DataToString(info)
                 });
+            return bar;
         }
         public string Signall()
         {
