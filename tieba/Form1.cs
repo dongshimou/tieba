@@ -16,13 +16,31 @@ namespace tieba
         public baidu bd;
         private Form2 f2;
         private Form3 f3;
-        public Form1()
+
+        public Form1() :
+            this(string.Empty)
+        {
+        }
+        public Form1(string proxy):
+            this(string.Empty, string.Empty,proxy)
+        {
+        }
+
+        public Form1(string username, string password) :
+            this(username, password, string.Empty)
+        {
+        }
+        public Form1(string username,string password,string proxy)
         {
             InitializeComponent();
             bd = new baidu();
             label1.Text = bd.Init();
-            textBox1.Text = "ksbe74906888@163.com";
-            textBox2.Text = "zxj654321";
+            if(!string.IsNullOrEmpty(proxy))
+            bd.setProxy(proxy);
+            if(!string.IsNullOrEmpty(username))
+            textBox1.Text = username;//"ksbe74906888@163.com"
+            if(!string.IsNullOrEmpty(password))
+            textBox2.Text = password;//"zxj654321"
             button1.Text = "1获取验证码";
             button2.Text = "2校验验证码";
             button3.Text = "5一键签到";
@@ -35,8 +53,14 @@ namespace tieba
         }
         private void button1_Click(object sender, EventArgs e)
         {
-            label1.Text = textBox1.Text;
-            if (bd.IsgetcodeString(textBox1.Text.Trim()))
+            var username = textBox1.Text.Trim();
+            label1.Text = username;
+            if (string.IsNullOrEmpty(username))
+            {
+                label1.Text = "用户名为空";
+                return;
+            }
+            if (bd.IsgetcodeString(username))
                 pictureBox1.Image = bd.GetLoginCode();
             else
                 label1.Text = "不需要验证码";
@@ -117,6 +141,11 @@ namespace tieba
             //this.WindowState = FormWindowState.Minimized;
             e.Cancel = true;
             this.Hide();
+        }
+
+        private void LoadData(object sender, EventArgs e)
+        {
+            label7.Text = bd.Proxy;
         }
     }
 }

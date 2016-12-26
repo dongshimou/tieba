@@ -24,6 +24,7 @@ namespace tieba
     {
         private string replaycodestr = string.Empty;
         private string replaycodetype = string.Empty;
+        public string Proxy { get; set; }
         public string barname { get; set; }
         private string vcodemd5 = string.Empty;
         private string tbs = string.Empty;
@@ -44,6 +45,12 @@ namespace tieba
         public CookieContainer cookie = new CookieContainer();
         public baidu()
         {
+            Proxy = "ieproxy";
+        }
+
+        public void setProxy(string ip)
+        {
+            Proxy = ip;
         }
         public string Init()
         {
@@ -62,6 +69,7 @@ namespace tieba
                     URL = url + HttpHelper.DataToString(nvc),
                     Method = "GET",
                     CookieContainer = cookie,
+                    ProxyIp = Proxy,
                     ResultCookieType = ResultCookieType.CookieContainer
                 });
             nvc = new NameValueCollection
@@ -78,6 +86,7 @@ namespace tieba
                    URL = url + HttpHelper.DataToString(nvc),
                    Method = "GET",
                    CookieContainer = cookie,
+                   ProxyIp = Proxy,
                    ResultCookieType = ResultCookieType.CookieContainer
                });
             var json0 = new JavaScriptSerializer().
@@ -99,6 +108,7 @@ namespace tieba
                    URL = url + HttpHelper.DataToString(nvc),
                    Method = "GET",
                    CookieContainer = cookie,
+                   ProxyIp = Proxy,
                    ResultCookieType = ResultCookieType.CookieContainer
                });
             var json1 = new JavaScriptSerializer().
@@ -134,8 +144,10 @@ namespace tieba
                     URL = url + HttpHelper.DataToString(nvc),
                     Method = "GET",
                     CookieContainer = cookie,
+                    ProxyIp = Proxy,
                     ResultCookieType = ResultCookieType.CookieContainer
                 });
+            if(httpResult.Html== "无法连接到远程服务器")return false;
             var str = httpResult.Html.Replace("bd__cbs__29t9z0(", "");
             str = str.Remove(str.Length - 1, 1);
             var json1 = new JavaScriptSerializer().
@@ -160,6 +172,7 @@ namespace tieba
                     URL = url,
                     Method = "GET",
                     CookieContainer = cookie,
+                    ProxyIp = Proxy,
                     ResultCookieType = ResultCookieType.CookieContainer,
                     ResultType = ResultType.Byte
                 });
@@ -189,6 +202,7 @@ namespace tieba
                     URL = url + HttpHelper.DataToString(nvc),
                     Method = "GET",
                     CookieContainer = cookie,
+                    ProxyIp = Proxy,
                     ResultCookieType = ResultCookieType.CookieContainer
                 });
             if (httpResult.StatusCode.Equals(HttpStatusCode.OK))
@@ -220,6 +234,7 @@ namespace tieba
                     URL = url + HttpHelper.DataToString(nvc),
                     Method = "GET",
                     CookieContainer = cookie,
+                    ProxyIp = Proxy,
                     ResultCookieType = ResultCookieType.CookieContainer
                 });
             if (httpResult.StatusCode.Equals(HttpStatusCode.OK))
@@ -237,6 +252,7 @@ namespace tieba
                         URL = url + verifyStr,
                         Method = "GET",
                         CookieContainer = cookie,
+                        ProxyIp = Proxy,
                         ResultCookieType = ResultCookieType.CookieContainer,
                         ResultType = ResultType.Byte
                     });
@@ -266,6 +282,7 @@ namespace tieba
                     URL = url + HttpHelper.DataToString(nvc),
                     Method = "GET",
                     CookieContainer = cookie,
+                    ProxyIp = Proxy,
                     ResultCookieType = ResultCookieType.CookieContainer
                 });
             if (httpResult.StatusCode.Equals(HttpStatusCode.OK))
@@ -307,6 +324,7 @@ namespace tieba
                 Postdata = HttpHelper.DataToString(info),
                 PostDataType = PostDataType.String,
                 CookieContainer = cookie,
+                ProxyIp = Proxy,
                 ResultCookieType = ResultCookieType.CookieContainer
             });
             cookies = httpResult.Cookie;
@@ -322,6 +340,7 @@ namespace tieba
                     URL = url,
                     Method = "GET",
                     CookieContainer = cookie,
+                    ProxyIp = Proxy,
                     ResultCookieType = ResultCookieType.CookieContainer
                 });
             cookies = result.Cookie;
@@ -344,6 +363,7 @@ namespace tieba
                     URL = url,
                     Method = "GET",
                     CookieContainer = cookie,
+                    ProxyIp = Proxy,
                     ResultCookieType = ResultCookieType.CookieContainer
                 });
             if (httpResult.StatusCode.Equals(HttpStatusCode.OK))
@@ -370,6 +390,7 @@ namespace tieba
                     URL = url,
                     Method = "POST",
                     CookieContainer = cookie,
+                    ProxyIp = Proxy,
                     Postdata = HttpHelper.DataToString(info),
                     ResultCookieType = ResultCookieType.CookieContainer
                 });
@@ -407,6 +428,7 @@ namespace tieba
                     Method = "POST",
                     Postdata = HttpHelper.DataToString(info),
                     CookieContainer = cookie,
+                    ProxyIp = Proxy,
                     ResultCookieType = ResultCookieType.CookieContainer
                 });
             var obj = new JavaScriptSerializer().
@@ -445,6 +467,7 @@ namespace tieba
                     Method = "POST",
                     Postdata = HttpHelper.DataToString(info),
                     CookieContainer = cookie,
+                    ProxyIp = Proxy,
                     ResultCookieType = ResultCookieType.CookieContainer
                 });
             var obj = new JavaScriptSerializer().
@@ -483,6 +506,7 @@ namespace tieba
                     Method = "POST",
                     Postdata = HttpHelper.DataToString(info),
                     CookieContainer = cookie,
+                    ProxyIp = Proxy,
                     ResultCookieType = ResultCookieType.CookieContainer
                 });
             var obj = new JavaScriptSerializer().
@@ -528,6 +552,7 @@ namespace tieba
                     Method = "POST",
                     Postdata = HttpHelper.DataToString(info),
                     CookieContainer = cookie,
+                    ProxyIp = Proxy,
                     ResultCookieType = ResultCookieType.CookieContainer
                 });
             var obj = new JavaScriptSerializer().
@@ -552,6 +577,7 @@ namespace tieba
                     URL = url,
                     Method = "GET",
                     CookieContainer = cookie,
+                    ProxyIp = Proxy,
                     ResultCookieType = ResultCookieType.CookieContainer
                 });
             var json1 = new JavaScriptSerializer().
@@ -570,6 +596,7 @@ namespace tieba
                     URL = "http://tieba.baidu.com/sign/add",
                     Method = "POST",
                     CookieContainer = cookie,
+                    ProxyIp = Proxy,
                     ResultCookieType = ResultCookieType.CookieContainer,
                     Postdata = HttpHelper.DataToString(info)
                 });
@@ -603,6 +630,7 @@ namespace tieba
                     URL = url + HttpHelper.DataToString(nvc),
                     Method = "GET",
                     CookieContainer = cookie,
+                    ProxyIp = Proxy,
                     ResultCookieType = ResultCookieType.CookieContainer
                 });
             var json = new JavaScriptSerializer().
@@ -648,6 +676,7 @@ namespace tieba
                     URL = url + HttpHelper.DataToString(info),
                     Method = "GET",
                     CookieContainer = cookie,
+                    ProxyIp = Proxy,
                     ResultCookieType = ResultCookieType.CookieContainer
                 });
             if (HttpResult.Html.Length < 10001) return false;
