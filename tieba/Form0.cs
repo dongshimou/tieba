@@ -37,6 +37,9 @@ namespace tieba
             var index = listBox1.SelectedIndex;
             if (index < 0 || index >= listBox1.Items.Count) return;
             user[listBox1.Text].Close();
+            user[listBox1.Text].Dispose();
+            user.Remove(listBox1.Text);
+            proxy.Remove(listBox1.Text);
             listBox1.Items.RemoveAt(index);
             if (index > 0)
                 listBox1.SelectedIndex = index - 1;
@@ -116,7 +119,7 @@ namespace tieba
         }
         private void saveuser()
         {
-            var sw = new StreamWriter("user.txt");
+            var sw = new StreamWriter("user.txt",false,Encoding.UTF8);
             foreach (var line in listBox1.Items)
             {
                 sw.WriteLine(line.ToString());
@@ -154,7 +157,5 @@ namespace tieba
             saveuser();
             saveproxy();
         }
-
-        
     }
 }
