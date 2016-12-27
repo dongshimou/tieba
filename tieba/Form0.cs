@@ -14,11 +14,15 @@ namespace tieba
 
     public partial class Form0 : Form
     {
-        private List<Form1> user;
+        private Dictionary<string,Form1> user;
+        private Dictionary<string, string> proxy;
+        private Dictionary<string,bool> address;
         public Form0()
         {
             InitializeComponent();
-            user = new List<Form1>();
+            user = new Dictionary<string, Form1>();
+            address=new Dictionary<string, bool>();
+            proxy=new Dictionary<string, string>();
             readuser();
             readproxy();
         }
@@ -32,8 +36,8 @@ namespace tieba
         {
             var index = listBox1.SelectedIndex;
             if (index < 0 || index >= listBox1.Items.Count) return;
+            user[listBox1.Text].Close();
             listBox1.Items.RemoveAt(index);
-            user[index].Close();
             if (index > 0)
                 listBox1.SelectedIndex = index - 1;
         }
@@ -47,19 +51,29 @@ namespace tieba
         {
             var index = listBox2.SelectedIndex;
             if (index < 0 || index >= listBox2.Items.Count) return;
+            removeproxy(listBox2.Text);
             listBox2.Items.RemoveAt(index);
             if (index > 0)
                 listBox2.SelectedIndex = index - 1;
         }
-        private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            //var c = listBox1.SelectedIndex;
-            //user[listBox1.SelectedIndex].Show();
-        }
         private void listBox1_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            user[listBox1.SelectedIndex].bd.setProxy(listBox2.Text);
-            user[listBox1.SelectedIndex].Show();
+            if (string.IsNullOrEmpty(listBox1.Text))
+                return;
+            var obj = listBox1.Text.Split(',');
+            if(!user.ContainsKey(listBox1.Text))
+            user.Add(listBox1.Text,new Form1(obj[0],obj[1]));
+            if (!proxy.ContainsKey(listBox1.Text))
+            {
+                proxy.Add(listBox1.Text,listBox2.Text);
+                user[listBox1.Text].setProxy(listBox2.Text);
+            }
+            else if (proxy[listBox1.Text] != listBox2.Text)
+            {
+                proxy[listBox1.Text] = listBox2.Text;
+                user[listBox1.Text].init(obj[0], obj[1], listBox2.Text);
+            }
+            user[listBox1.Text].Show();
         }
         private void readuser()
         {
@@ -120,12 +134,18 @@ namespace tieba
         }
         private void addproxy(string s)
         {
+            if(address.ContainsKey(s))return;
+            address.Add(s,true);
             listBox2.Items.Add(s);
             listBox2.SelectedIndex = listBox2.Items.Count - 1;
         }
+
+        private void removeproxy(string s)
+        {
+            address.Remove(s);
+        }
         private void adduser(string username, string password)
         {
-            user.Add(new Form1(username, password));
             listBox1.Items.Add(username + "," + password);
             listBox1.SelectedIndex = listBox1.Items.Count - 1;
         }
@@ -134,5 +154,7 @@ namespace tieba
             saveuser();
             saveproxy();
         }
+
+        
     }
 }

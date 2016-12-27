@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using tieba;
+
 namespace tieba
 {
     public partial class Form1 : Form
@@ -16,7 +17,6 @@ namespace tieba
         public baidu bd;
         private Form2 f2;
         private Form3 f3;
-
         public Form1() :
             this(string.Empty)
         {
@@ -33,25 +33,35 @@ namespace tieba
         public Form1(string username,string password,string proxy)
         {
             InitializeComponent();
-            bd = new baidu();
-            label1.Text = bd.Init();
-            if(!string.IsNullOrEmpty(proxy))
-            bd.setProxy(proxy);
-            if(!string.IsNullOrEmpty(username))
-            textBox1.Text = username;//"ksbe74906888@163.com"
-            if(!string.IsNullOrEmpty(password))
-            textBox2.Text = password;//"zxj654321"
-            button1.Text = "1获取验证码";
-            button2.Text = "2校验验证码";
-            button3.Text = "5一键签到";
+            button2.Text = "1校验验证码";
+            button3.Text = "3一键签到";
             button4.Text = "4IE打开";
-            button5.Text = "3登录";
-            button6.Text = "6重置";
-            button7.Text = "7发帖";
-            button8.Text = "8回帖";
+            button5.Text = "2登录";
+            button7.Text = "5发帖";
+            button8.Text = "6回帖";
             //this.ControlBox = false;
+            init(username,password,proxy);
         }
-        private void button1_Click(object sender, EventArgs e)
+        public void init(string username, string password, string proxy)
+        {
+            bd = new baidu();
+            bd.SignEvent += new baidu.SignDelegate(getlabel);
+            if (!string.IsNullOrEmpty(proxy))
+                bd.setProxy(proxy);
+            if (!string.IsNullOrEmpty(username))
+                textBox1.Text = username;//"ksbe74906888@163.com"
+            if (!string.IsNullOrEmpty(password))
+                textBox2.Text = password;//"zxj654321"
+            label1.Text = bd.Init();
+            pictureBox1.Image = null;
+            getcode();
+        }
+        void getlabel(string s)
+        {
+            label1.Text = "正在签到 " + s;
+        }
+
+        void getcode()
         {
             var username = textBox1.Text.Trim();
             label1.Text = username;
@@ -60,10 +70,16 @@ namespace tieba
                 label1.Text = "用户名为空";
                 return;
             }
-            if (bd.IsgetcodeString(username))
+            var res = bd.IsgetcodeString(username);
+            if (res == string.Empty)
+            {
                 pictureBox1.Image = bd.GetLoginCode();
+            }
             else
-                label1.Text = "不需要验证码";
+            {
+                label1.Text = res;
+                return;
+            }
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -73,13 +89,19 @@ namespace tieba
         }
         private void thread_signall()
         {
-            bd.Signall();
+            label1.Text=bd.Signall();
         }
         private void button3_Click(object sender, EventArgs e)
         {
             label1.Text = "后台正在签到，请勿其他操作";
+
+            //多线程
+            Control.CheckForIllegalCrossThreadCalls = false;
             Thread t = new Thread(new ThreadStart(thread_signall));
+            t.IsBackground=true;
             t.Start();
+
+            //单线程
             //label1.Text = bd.Signall();
         }
 
@@ -95,12 +117,16 @@ namespace tieba
                 label1.Text = "登录成功";
             else
                 label1.Text = "登录失败";
+            bd.SignReady();
+            foreach(var one in bd.like)
+            {
+                listBox1.Items.Add(one);
+            }
         }
 
         private void button6_Click(object sender, EventArgs e)
         {
-            bd = new baidu();
-            label1.Text = bd.Init();
+            init(string.Empty, string.Empty, string.Empty);
         }
 
         private void button7_Click(object sender, EventArgs e)
@@ -130,22 +156,36 @@ namespace tieba
                 label1.Text = "获取贴吧信息失败，稍后重试";
             }
         }
-        private void Form1_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-            e.Cancel = true;
-        }
-        
         protected override void OnClosing(CancelEventArgs e)
         {
-            this.ShowInTaskbar = false;
+            //this.ShowInTaskbar = false;
             //this.WindowState = FormWindowState.Minimized;
             e.Cancel = true;
             this.Hide();
         }
-
-        private void LoadData(object sender, EventArgs e)
+        public void setProxy(string s)
         {
-            label7.Text = bd.Proxy;
+            label7.Text = s;
+        }
+
+        private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            textBox4.Text = listBox1.Text;
+        }
+        private void pictureBox1_MouseClick(object sender, MouseEventArgs e)
+        {
+            var username = textBox1.Text.Trim();
+            label1.Text = username;
+            if (string.IsNullOrEmpty(username))
+            {
+                label1.Text = "用户名为空";
+                return;
+            }
+            var res = bd.IsgetcodeString(username);
+            if (res == string.Empty)
+                pictureBox1.Image = bd.GetLoginCode();
+            else
+                label1.Text = res;
         }
     }
 }

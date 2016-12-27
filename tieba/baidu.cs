@@ -18,10 +18,14 @@ using System.Drawing;
 using System.Net.Http;
 using System.Threading;
 using tieba;
+
 namespace tieba
 {
     public class baidu
     {
+        public delegate void SignDelegate(string s);
+
+        public event SignDelegate SignEvent;
         private string replaycodestr = string.Empty;
         private string replaycodetype = string.Empty;
         public string Proxy { get; set; }
@@ -41,8 +45,9 @@ namespace tieba
         private string verifyStr { get; set; }
         private string pstm { get; set; }
         public string error { get; set; }
-        private List<string> like = new List<string>();
+        public List<string> like = new List<string>();
         public CookieContainer cookie = new CookieContainer();
+
         public baidu()
         {
             Proxy = "ieproxy";
@@ -52,6 +57,7 @@ namespace tieba
         {
             Proxy = ip;
         }
+
         public string Init()
         {
             string url = "https://passport.baidu.com/v2/api/?getapi&";
@@ -70,6 +76,7 @@ namespace tieba
                     Method = "GET",
                     CookieContainer = cookie,
                     ProxyIp = Proxy,
+                    Timeout = 2000,
                     ResultCookieType = ResultCookieType.CookieContainer
                 });
             nvc = new NameValueCollection
@@ -81,17 +88,28 @@ namespace tieba
                 {"tt", DateTime.Now.Ticks.ToString()},
             };
             httpResult = new HttpHelper().GetHtml(
-               new HttpItem()
-               {
-                   URL = url + HttpHelper.DataToString(nvc),
-                   Method = "GET",
-                   CookieContainer = cookie,
-                   ProxyIp = Proxy,
-                   ResultCookieType = ResultCookieType.CookieContainer
-               });
+                new HttpItem()
+                {
+                    URL = url + HttpHelper.DataToString(nvc),
+                    Method = "GET",
+                    CookieContainer = cookie,
+                    ProxyIp = Proxy,
+                    Timeout = 2000,
+                    ResultCookieType = ResultCookieType.CookieContainer
+                });
+            try
+            {
+                var json = new JavaScriptSerializer().
+                    DeserializeObject(httpResult.Html);
+
+            }
+            catch
+            {
+                return "初始化失败";
+            }
             var json0 = new JavaScriptSerializer().
-                DeserializeObject(httpResult.Html)
-                as Dictionary<string, object>;
+                    DeserializeObject(httpResult.Html) 
+                    as Dictionary<string, object>;
             var j1 = json0["data"] as Dictionary<string, object>;
             token = j1["token"] as string;
             url = "https://passport.baidu.com/v2/getpublickey?";
@@ -103,16 +121,17 @@ namespace tieba
                 {"tt", DateTime.Now.Ticks.ToString()},
             };
             httpResult = new HttpHelper().GetHtml(
-               new HttpItem()
-               {
-                   URL = url + HttpHelper.DataToString(nvc),
-                   Method = "GET",
-                   CookieContainer = cookie,
-                   ProxyIp = Proxy,
-                   ResultCookieType = ResultCookieType.CookieContainer
-               });
+                new HttpItem()
+                {
+                    URL = url + HttpHelper.DataToString(nvc),
+                    Method = "GET",
+                    CookieContainer = cookie,
+                    ProxyIp = Proxy,
+                    Timeout = 2000,
+                    ResultCookieType = ResultCookieType.CookieContainer
+                });
             var json1 = new JavaScriptSerializer().
-                DeserializeObject(httpResult.Html)
+                    DeserializeObject(httpResult.Html)
                 as Dictionary<string, object>;
             var errno = json1["errno"] as string;
             if (errno != "0") return "获取key失败";
@@ -123,20 +142,22 @@ namespace tieba
             rsakey = json1["key"] as string;
             return "初始化成功";
         }
-        public bool IsgetcodeString(string username)
+
+        public string IsgetcodeString(string username)
         {
+            //https
             var url = "https://passport.baidu.com/v2/api/?logincheck&";
             var nvc = new NameValueCollection
             {
                 //{"logincheck","" },
-                {"token",token},
-                {"tpl","pp" },
-                {"apiver","v3" },
-                {"tt",DateTime.Now.Ticks.ToString () },
+                {"token", token},
+                {"tpl", "pp"},
+                {"apiver", "v3"},
+                {"tt", DateTime.Now.Ticks.ToString()},
                 {"username", username},
-                {"isphone","false" },
-                { "sub_source","leadsetpwd"},
-                {"callback","bd__cbs__29t9z0" },
+                {"isphone", "false"},
+                {"sub_source", "leadsetpwd"},
+                //{"callback","cb" },
             };
             var httpResult = new HttpHelper().GetHtml(
                 new HttpItem()
@@ -145,23 +166,31 @@ namespace tieba
                     Method = "GET",
                     CookieContainer = cookie,
                     ProxyIp = Proxy,
+                    Timeout = 2000,
                     ResultCookieType = ResultCookieType.CookieContainer
                 });
-            if(httpResult.Html== "无法连接到远程服务器")return false;
-            var str = httpResult.Html.Replace("bd__cbs__29t9z0(", "");
-            str = str.Remove(str.Length - 1, 1);
+            try
+            {
+                var obj = new JavaScriptSerializer().
+                DeserializeObject(httpResult.Html);
+            }
+            catch
+            {
+                return "操作超时";
+            }
+            
             var json1 = new JavaScriptSerializer().
-                DeserializeObject(str)
+                DeserializeObject(httpResult.Html)
                 as Dictionary<string, object>;
             var j1 = json1["data"] as Dictionary<string, object>;
             if (!j1.ContainsKey("codeString") || j1["codeString"] == null)
-                return false;
+                return "不需要验证码";
             codeString = j1["codeString"].ToString();
             if (j1.ContainsKey("vcodetype"))
                 vcodetype = j1["vcodetype"].ToString();
             else
                 vcodetype = string.Empty;
-            return !string.IsNullOrEmpty(codeString);
+            return string.Empty;
         }
         public Image GetLoginCode()
         {
@@ -344,6 +373,7 @@ namespace tieba
                     ResultCookieType = ResultCookieType.CookieContainer
                 });
             cookies = result.Cookie;
+            if(cookies==null)return;
             var split = cookies.Split(';');
             foreach (var str in split)
             {
@@ -602,19 +632,23 @@ namespace tieba
                 });
             return bar;
         }
-        public string Signall()
+        public string SignReady()
         {
-            string result = string.Empty;
+            var result = string.Empty;
             GetPSTM();
             if (!GetLike())
                 return error;
+            else
+                return result;
+        }
+        public string Signall()
+        {
             foreach (var one in like)
             {
-                Sign(one);
+                OnSignEvent(Sign(one));
                 Thread.Sleep(3000);
             }
-            result = "签到完成";
-            return result;
+            return "签到完成";
         }
         public bool GetLike()
         {
@@ -716,6 +750,11 @@ namespace tieba
                 string.IsNullOrEmpty(fid))
                 return false;
             else return true;
+        }
+
+        protected virtual void OnSignEvent(string s)
+        {
+            SignEvent?.Invoke(s);
         }
     }
 }
