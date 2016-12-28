@@ -88,7 +88,7 @@ namespace tieba
                 var f = File.Create("user.txt");
                 f.Close();
             }
-            var sr = new StreamReader("user.txt", Encoding.Default);
+            var sr = new StreamReader("user.txt", Encoding.UTF8);
             var line = sr.ReadLine();
             while (line != null)
             {
@@ -108,7 +108,7 @@ namespace tieba
                 var f = File.Create("proxy.txt");
                 f.Close();
             }
-            StreamReader sr = new StreamReader("proxy.txt", Encoding.Default);
+            StreamReader sr = new StreamReader("proxy.txt", Encoding.UTF8);
             string line = sr.ReadLine();
             while (line != null)
             {
@@ -128,7 +128,7 @@ namespace tieba
         }
         private void saveproxy()
         {
-            var sw = new StreamWriter("proxy.txt");
+            var sw = new StreamWriter("proxy.txt", false, Encoding.UTF8);
             foreach (var line in listBox2.Items)
             {
                 sw.WriteLine(line.ToString());

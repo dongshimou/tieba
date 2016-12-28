@@ -19,8 +19,10 @@ using System.Net.Http;
 using System.Threading;
 using tieba;
 
+
 namespace tieba
 {
+    using HtmlAgilityPack;
     public class baidu
     {
         public delegate void SignDelegate(string s);
@@ -47,7 +49,7 @@ namespace tieba
         public string error { get; set; }
         public List<string> like = new List<string>();
         public CookieContainer cookie = new CookieContainer();
-
+        public Dictionary<string,string>barinfo=new Dictionary<string,string>();
         public baidu()
         {
             Proxy = "ieproxy";
@@ -650,7 +652,44 @@ namespace tieba
             }
             return "签到完成";
         }
-        public bool GetLike()
+        private bool GetAllLike()
+        {
+            var request = WebRequest.CreateHttp("http://tieba.baidu.com/f/like/mylike?&pn=1");
+            request.CookieContainer = cookie;
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            Stream dataStream = response.GetResponseStream();
+            StreamReader reader = new StreamReader(dataStream);
+            string responseFromServer = reader.ReadToEnd();
+            reader.Close();
+            dataStream.Close();
+            response.Close();
+            for (int i = 1; i < 30; i++)
+            {
+                string url = "http://tieba.baidu.com/f/like/mylike?&pn=" + i;
+                var result = new HttpHelper().GetHtml(
+                    new HttpItem
+                    {
+                        URL = url,
+                        Method = "GET",
+                        CookieContainer = cookie,
+                        ProxyIp = Proxy,
+                        ResultCookieType = ResultCookieType.CookieContainer
+                    });
+                HtmlDocument html = new HtmlDocument();
+                html.LoadHtml(result.Html);
+                var root = html.DocumentNode;
+                var total = root.SelectNodes("//tr");
+                if(total==null||total.Count==1)break;
+                foreach (var one in total)
+                {
+                    var two = one.SelectNodes("td");
+                    if (two == null) continue;
+                    like.Add(two[0].FirstChild.InnerText);
+                }
+            }
+            return true;
+        }
+        private bool GetTopLike()
         {
             string url = "http://tieba.baidu.com/p/getLikeForum?";
             //uid = getTime_t().ToString ();
@@ -684,6 +723,12 @@ namespace tieba
             }
             return true;
         }
+        public bool GetLike()
+        {
+            like = new List<string>();
+            return GetAllLike();
+            //return GetTopLike();
+        }
         private uint getTime_t()
         {
             var startTime = new DateTime(1970, 1, 1, 0, 0, 0, 0);
@@ -713,7 +758,25 @@ namespace tieba
                     ProxyIp = Proxy,
                     ResultCookieType = ResultCookieType.CookieContainer
                 });
-            if (HttpResult.Html.Length < 10001) return false;
+            HtmlDocument html = new HtmlDocument();
+            html.LoadHtml(HttpResult.Html);
+            barinfo = new Dictionary<string, string>();
+            var PostList = html.GetElementbyId("thread_list");
+            if (PostList == null)return false;
+            foreach(var li in PostList.SelectNodes ("//li"))
+            {
+                var one = li.ChildAttributes("data-field");
+                if (one == null) continue;
+                foreach( var two in one)
+                {
+                    var c = two.Value;
+                    c=c.Replace("&quot;","\"");
+                    var obj = new JavaScriptSerializer()
+                        .DeserializeObject(c) as
+                        Dictionary<string,object>;
+                    barinfo.Add(obj["id"].ToString(), obj["reply_num"].ToString());
+                }
+            }
             string text = HttpResult.Html.Remove(10000);
             //(?<=script).*(?=script)
             Regex rx = new Regex(@"(?<=tbs).*(\})",
