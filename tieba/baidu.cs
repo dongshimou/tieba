@@ -49,7 +49,7 @@ namespace tieba
         public string error { get; set; }
         public List<string> like = new List<string>();
         public CookieContainer cookie = new CookieContainer();
-        public Dictionary<string,string>barinfo=new Dictionary<string,string>();
+        public Dictionary<string, string> barinfo = new Dictionary<string, string>();
         public baidu()
         {
             Proxy = "ieproxy";
@@ -110,7 +110,7 @@ namespace tieba
                 return "初始化失败";
             }
             var json0 = new JavaScriptSerializer().
-                    DeserializeObject(httpResult.Html) 
+                    DeserializeObject(httpResult.Html)
                     as Dictionary<string, object>;
             var j1 = json0["data"] as Dictionary<string, object>;
             token = j1["token"] as string;
@@ -145,6 +145,10 @@ namespace tieba
             return "初始化成功";
         }
 
+        public int getCodeType()
+        {
+            return Convert.ToInt32(replaycodetype);
+        }
         public string IsgetcodeString(string username)
         {
             //https
@@ -180,7 +184,7 @@ namespace tieba
             {
                 return "操作超时";
             }
-            
+
             var json1 = new JavaScriptSerializer().
                 DeserializeObject(httpResult.Html)
                 as Dictionary<string, object>;
@@ -375,7 +379,7 @@ namespace tieba
                     ResultCookieType = ResultCookieType.CookieContainer
                 });
             cookies = result.Cookie;
-            if(cookies==null)return;
+            if (cookies == null) return;
             var split = cookies.Split(';');
             foreach (var str in split)
             {
@@ -400,15 +404,18 @@ namespace tieba
                 });
             if (httpResult.StatusCode.Equals(HttpStatusCode.OK))
             {
-
                 return Image.FromStream(new MemoryStream(httpResult.ResultByte));
             }
             else
                 return null;
         }
-        public bool SetPostCode(string input)
+        public bool SetPostCode(string input, int type)
         {
-            var url = "http://tieba.baidu.com/f/commit/commonapi/checkVcode";
+            var url = string.Empty;
+            if (type == 1)
+                url = "http://tieba.baidu.com/f/commit/commonapi/checkVcode";
+            else if (type == 4)
+                url = "http://tieba.baidu.com/sign/checkVcode";
             var info = new NameValueCollection
             {
                 { "captcha_vcode_str",replaycodestr },
@@ -431,15 +438,18 @@ namespace tieba
                 as Dictionary<string, object>;
             return obj["anti_valve_err_no"].ToString() == "0";
         }
-        public bool codereplay(string vcode, string bar, string content)
+        public bool codereplay(string vcode, string bar, string content, string title = "")
         {
-            var url = "http://tieba.baidu.com/f/commit/post/add";
+            var url = string.Empty;
+            if (title == "")
+                url = "http://tieba.baidu.com/f/commit/post/add";
+            else
+                url = "http://tieba.baidu.com/f/commit/thread/add";
             var info = new NameValueCollection
             {
                  {"ie", "utf-8"},
                  {"kw", bar},
                  {"fid", fid},
-                 {"tid", tid},
                  {"vcode_md5", replaycodestr},
                  {"floor_num", "0"},
                  {"rich_text","1"},
@@ -451,8 +461,18 @@ namespace tieba
                  {"talk_type", null},
                  {"vcode", vcode},
                  {"tag","11" },
-                 {"__type__","reply" },
             };
+            if (title != "")
+            {
+                info.Add("title", title);
+                info.Add("__type__", "thread");
+                info.Add("tid", "0");
+            }
+            else
+            {
+                info.Add("__type__", "reply");
+                info.Add("tid", tid);
+            }
             var result = new HttpHelper().GetHtml(
                 new HttpItem
                 {
@@ -468,115 +488,43 @@ namespace tieba
                 as Dictionary<string, object>;
             return obj["err_code"].ToString() == "0";
         }
-        public bool codepost(string vcode, string bar, string title, string content)
-        {
-            var url = "http://tieba.baidu.com/f/commit/thread/add";
-            var info = new NameValueCollection
-            {
-                {"ie", "utf-8"},
-                {"kw", bar},
-                {"fid", fid},
-                {"tid", "0"},
-                {"vcode_md5", replaycodestr},
-                {"floor_num", "0"},
-                {"rich_text", "1"},
-                {"tbs", tbs},
-                {"content", content},
-                {"title", title},
-                {"lp_type", "1"},
-                {"lp_sub_type", "1"},
-                {"repostid", null},
-                {"talk_type", null},
-                {"new_vcode", "1"},
-                {"tag", "11"},
-                {"vcode",vcode },
-                {"__type__", "thread"},
-            };
-            var result = new HttpHelper().GetHtml(
-                new HttpItem
-                {
-                    URL = url,
-                    Method = "POST",
-                    Postdata = HttpHelper.DataToString(info),
-                    CookieContainer = cookie,
-                    ProxyIp = Proxy,
-                    ResultCookieType = ResultCookieType.CookieContainer
-                });
-            var obj = new JavaScriptSerializer().
-                    DeserializeObject(result.Html)
-                as Dictionary<string, object>;
-            return (obj["err_code"].ToString() == "0");
-        }
-        public bool post(string bar, string title, string content)
+        public bool replay(string bar, string content, string title = "")
         {
             replaycodestr = string.Empty;
-            var url = "http://tieba.baidu.com/f/commit/thread/add";
-            var info = new NameValueCollection
-            {
-                {"ie", "utf-8"},
-                {"kw", bar},
-                {"fid", fid},
-                {"tid", "0"},
-                {"vcode_md5", replaycodestr},
-                {"floor_num", "0"},
-                {"rich_text", "1"},
-                {"tbs", tbs},
-                {"content", content},
-                {"title", title},
-                {"lp_type", "1"},
-                {"lp_sub_type", "1"},
-                {"repostid", null},
-                {"talk_type", null},
-                {"new_vcode", "1"},
-                {"tag", "11"},
-                {"__type__", "thread"},
-            };
-            var result = new HttpHelper().GetHtml(
-                new HttpItem
-                {
-                    URL = url,
-                    Method = "POST",
-                    Postdata = HttpHelper.DataToString(info),
-                    CookieContainer = cookie,
-                    ProxyIp = Proxy,
-                    ResultCookieType = ResultCookieType.CookieContainer
-                });
-            var obj = new JavaScriptSerializer().
-                    DeserializeObject(result.Html)
-                as Dictionary<string, object>;
-            if (obj["err_code"].ToString() == "40")
-            {
-                obj = obj["data"] as Dictionary<string, object>;
-                obj = obj["vcode"] as Dictionary<string, object>;
-                replaycodestr = obj["captcha_vcode_str"].ToString();
-                replaycodetype = obj["captcha_code_type"].ToString();
-                return true;
-            }
-            return false;
-        }
-        public bool replay(string bar, string content)
-        {
-            replaycodestr = string.Empty;
-            var url = "http://tieba.baidu.com/f/commit/post/add";
+            var url = string.Empty;
+            if (title == "")
+                url = "http://tieba.baidu.com/f/commit/post/add";
+            else
+                url = "http://tieba.baidu.com/f/commit/thread/add";
             var info = new NameValueCollection
             {
                  {"ie", "utf-8"},
                  {"kw", bar},
                  {"fid", fid},
-                 {"tid", tid},
                  {"vcode_md5", replaycodestr},
                  {"floor_num", "0"},
                  {"rich_text","1"},
                  {"tbs",tbs},
                  {"content",content},
+                 {"files","[]"},
                  {"lp_type", "1"},
                  {"lp_sub_type", "1"},
                  {"repostid", null},
                  {"talk_type", null},
                  {"new_vcode", "1"},
                  {"tag","11" },
-                 {"__type__","reply" },
             };
+            if (title != "")
+            {
+                info.Add("title", title);
+                info.Add("__type__", "thread");
+                info.Add("tid", "0");
+            }
+            else
+            {
+                info.Add("__type__", "reply");
+                info.Add("tid", tid);
+            }
             var result = new HttpHelper().GetHtml(
                 new HttpItem
                 {
@@ -643,6 +591,116 @@ namespace tieba
             else
                 return result;
         }
+        public string UpLoadImage(string path,string refre)
+        {
+            var imageTbs = getImageTbs();
+            var url = "http://upload.tieba.baidu.com/upload/pic?";
+            var nvc = new NameValueCollection
+            {
+                {"tbs",imageTbs },
+                {"fid",fid },
+                {"save_yun_album","1" },
+            };
+            url += HttpHelper.DataToString(nvc);
+            string boundary = "----WebKitFormBoundarykz17xp0q7FAd2CVd";
+            HttpWebRequest webrequest = (HttpWebRequest)WebRequest.Create(url);
+            webrequest.ContentType = "multipart/form-data; boundary=" + boundary;
+            webrequest.Method = "POST";
+            webrequest.ContentLength = 0;
+            webrequest.KeepAlive = true;
+            webrequest.UserAgent = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36";
+            webrequest.Accept = "*/*";
+            webrequest.Referer = "http://tieba.baidu.com/p/"+refre;
+            webrequest.Host = "upload.tieba.baidu.com";
+            webrequest.CookieContainer = cookie;
+            //webrequest.Headers.Add("Cookie: " + cookie);
+            webrequest.Headers.Add("Origin: " + "http://tieba.baidu.com");
+
+
+            StringBuilder sb = new StringBuilder();
+            var list = path.Split('\\');
+            var filename = list[list.Length - 1];
+            list = filename.Split('.');
+            var filetype = list[list.Length - 1];
+            sb.Append("\r\n--"+boundary+"\r\n");
+            sb.Append("Content-Disposition: form-data; name=\"file\"; filename=\"" + filename+ "\"\r\n");
+            sb.Append("Content-Type: image/"+filetype+"\r\n\r\n");
+            byte[] postHeaderBytes = Encoding.UTF8.GetBytes(sb.ToString());
+
+            byte[] boundaryBytes = Encoding.UTF8.GetBytes("\r\n--" + boundary + "-–\r\n");
+
+            var fs = File.OpenRead(path);
+            byte[] buffer = new byte[fs.Length];
+            var length = postHeaderBytes.Length + fs.Length + boundaryBytes.Length;
+
+            webrequest.ContentLength = length;
+            fs.Read(buffer, 0, buffer.Length);
+            Stream requestStream = webrequest.GetRequestStream();
+            requestStream.Write(postHeaderBytes, 0, postHeaderBytes.Length);
+            requestStream.Write(buffer, 0, buffer.Length);
+            requestStream.Write(boundaryBytes, 0, boundaryBytes.Length);
+            WebResponse responce = webrequest.GetResponse();
+            Stream s = responce.GetResponseStream();
+            StreamReader sr = new StreamReader(s);
+
+            var HttpResult = sr.ReadToEnd();
+            var obj = new JavaScriptSerializer().
+                DeserializeObject(HttpResult)
+                as Dictionary<string, object>;
+            if (obj["err_no"].ToString() != "0")
+                return "error";
+            var info = obj["info"] as Dictionary<string, object>;
+            var pic_id_encode = info["pic_id_encode"].ToString();
+            var fullpic_width = info["fullpic_width"].ToString();
+            var fullpic_height = info["fullpic_height"].ToString();
+            var pic_type = info["pic_type"].ToString();
+            var width = Convert.ToInt32(fullpic_width);
+            var height = Convert.ToInt32(fullpic_height);
+
+            if(width>560)
+            {
+                var k = 560.0 / width;
+                width = Convert.ToInt32(width * k);
+                height = Convert.ToInt32(height * k);
+            }
+            string result = "[img+pic_type=" + pic_type;
+            result += "+width=" + width + "+height=" + height + "]";
+            result += "http://imgsrc.baidu.com/forum/pic/item/" + pic_id_encode + ".jpg";
+            result += "[/img]";
+            return result;
+            /*
+             * pic_id_encode:"8d82c1cb39dbb6fd40cf75420024ab18962b3792"
+             * fullpic_width:700
+             * fullpic_height:490
+             * pic_type:1
+             * "[img+pic_type=0+width=32+height=32]
+             * http://imgsrc.baidu.com/forum/pic/item/596da5dde71190efd4b163bbc71b9d16fcfa60e1.jpg
+             * [/img]"
+             max=560;
+             <img class="BDE_Image" pic_type="0" width="560" height="392" 
+             src="http://imgsrc.baidu.com/forum/pic/item/8d82c1cb39dbb6fd40cf75420024ab18962b3792.jpg" pic_ext="jpeg"  > 
+             */
+        }
+        private string getImageTbs()
+        {
+            var url = "http://tieba.baidu.com/dc/common/imgtbs";
+            var result = new HttpHelper().GetHtml(
+                    new HttpItem
+                    {
+                        URL = url,
+                        Method = "GET",
+                        CookieContainer = cookie,
+                        ProxyIp = Proxy,
+                        ResultCookieType = ResultCookieType.CookieContainer
+                    });
+            var obj = new JavaScriptSerializer().
+                DeserializeObject(result.Html)
+                as Dictionary<string, object>;
+            if (obj["no"].ToString() != "0")
+                return "error";
+            var data = obj["data"] as Dictionary<string, object>;
+            return data["tbs"].ToString();
+        }
         public string Signall()
         {
             foreach (var one in like)
@@ -679,7 +737,7 @@ namespace tieba
                 html.LoadHtml(result.Html);
                 var root = html.DocumentNode;
                 var total = root.SelectNodes("//tr");
-                if(total==null||total.Count==1)break;
+                if (total == null || total.Count == 1) break;
                 foreach (var one in total)
                 {
                     var two = one.SelectNodes("td");
@@ -762,18 +820,18 @@ namespace tieba
             html.LoadHtml(HttpResult.Html);
             barinfo = new Dictionary<string, string>();
             var PostList = html.GetElementbyId("thread_list");
-            if (PostList == null)return false;
-            foreach(var li in PostList.SelectNodes ("//li"))
+            if (PostList == null) return false;
+            foreach (var li in PostList.SelectNodes("//li"))
             {
                 var one = li.ChildAttributes("data-field");
                 if (one == null) continue;
-                foreach( var two in one)
+                foreach (var two in one)
                 {
                     var c = two.Value;
-                    c=c.Replace("&quot;","\"");
+                    c = c.Replace("&quot;", "\"");
                     var obj = new JavaScriptSerializer()
                         .DeserializeObject(c) as
-                        Dictionary<string,object>;
+                        Dictionary<string, object>;
                     barinfo.Add(obj["id"].ToString(), obj["reply_num"].ToString());
                 }
             }
@@ -814,7 +872,6 @@ namespace tieba
                 return false;
             else return true;
         }
-
         protected virtual void OnSignEvent(string s)
         {
             SignEvent?.Invoke(s);

@@ -21,20 +21,34 @@ namespace tieba
 
         private void button1_Click(object sender, EventArgs e)
         {
-            if (bd.post(bd.barname, textBox4.Text, textBox2.Text))
+            replay();
+        }
+        private void replay()
+        {
+            if (bd.replay(bd.barname, ContentBox.Text, TitleBox.Text))
             {
-                pictureBox1.Image=bd.GetPostCode();
+                if (bd.getCodeType() == 1)
+                {
+                    Form6 f6 = new Form6(bd.GetPostCode());
+                    f6.StartPosition = this.StartPosition;
+                    f6.SendEvent += new Form6.SendCode(GetCode);
+                    f6.ShowDialog(this);
+                }
+                else if (bd.getCodeType() == 4)
+                {
+                    点击验证码 f7 = new 点击验证码(bd.GetPostCode());
+                    f7.StartPosition = this.StartPosition;
+                    f7.SendEvent += new 点击验证码.SendCode(GetCode);
+                    f7.ShowDialog(this);
+                }
             }
         }
-
-        private void button2_Click(object sender, EventArgs e)
+        private void GetCode(string s)
         {
-            if (bd.SetPostCode(textBox3.Text.Trim()))
+            if (bd.SetPostCode(s, bd.getCodeType()))
             {
-                if (bd.codepost(textBox3.Text.Trim(), bd.barname, textBox4.Text, textBox2.Text))
-                {
-                    
-                }
+                CodeBox.Text = s;
+                bd.codereplay(s, bd.barname, ContentBox.Text, TitleBox.Text);
             }
         }
     }

@@ -1,6 +1,6 @@
 ﻿namespace tieba
 {
-    partial class Form6
+    partial class 点击验证码
     {
         /// <summary>
         /// Required designer variable.
@@ -29,56 +29,52 @@
         private void InitializeComponent()
         {
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.textBox1 = new System.Windows.Forms.TextBox();
-            this.button1 = new System.Windows.Forms.Button();
+            picture = new System.Windows.Forms.PictureBox[4];
+            for (int i = 0; i < 4; i++)
+                picture[i] = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
+            for (int i = 0; i < 4; i++)
+                ((System.ComponentModel.ISupportInitialize)(this.picture[i])).BeginInit();
             this.SuspendLayout();
             // 
             // pictureBox1
             // 
             this.pictureBox1.Location = new System.Drawing.Point(12, 12);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(260, 168);
+            this.pictureBox1.Size = new System.Drawing.Size(145, 180);
             this.pictureBox1.TabIndex = 0;
             this.pictureBox1.TabStop = false;
+            this.pictureBox1.Click += new System.EventHandler(this.pictureBox1_Click);
+            for (int i = 0; i < 4; i++)
+            {
+                this.picture[i].Location = new System.Drawing.Point(12, 12);
+                this.picture[i].Name = "picture" + i;
+                this.picture[i].Size = new System.Drawing.Size(60, 80);
+                this.picture[i].TabIndex = i + 1;
+                this.picture[i].TabStop = false;
+                this.picture[i].Click += new System.EventHandler(this.deleteClick);
+            }
             // 
-            // textBox1
-            // 
-            this.textBox1.Location = new System.Drawing.Point(13, 200);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(259, 21);
-            this.textBox1.TabIndex = 1;
-            // 
-            // button1
-            // 
-            this.button1.Location = new System.Drawing.Point(101, 240);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
-            this.button1.TabIndex = 2;
-            this.button1.Text = "确认";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
-            // 
-            // Form6
+            // 点击验证码
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(284, 275);
-            this.Controls.Add(this.button1);
-            this.Controls.Add(this.textBox1);
+            this.ClientSize = new System.Drawing.Size(251, 358);
             this.Controls.Add(this.pictureBox1);
-            this.Name = "Form6";
-            this.Text = "输入验证码";
+            for (int i = 0; i < 4; i++)
+                this.Controls.Add(this.picture[i]);
+            this.Name = "Form7";
+            this.Text = "点击验证码";
+            for (int i = 0; i < 4; i++)
+                ((System.ComponentModel.ISupportInitialize)(this.picture[i])).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
         #endregion
 
         private System.Windows.Forms.PictureBox pictureBox1;
-        private System.Windows.Forms.TextBox textBox1;
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.PictureBox[] picture;
     }
 }

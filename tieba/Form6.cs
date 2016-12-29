@@ -12,7 +12,7 @@ namespace tieba
 {
     public partial class Form6 : Form
     {
-        public delegate bool SendCode(string code);
+        public delegate void SendCode(string code);
         public event SendCode SendEvent;
         public Form6(Image m)
         {
@@ -27,6 +27,5 @@ namespace tieba
             textBox1.Text = string.Empty;
             this.Close();
         }
-
     }
 }

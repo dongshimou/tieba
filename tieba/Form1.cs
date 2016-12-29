@@ -118,6 +118,7 @@ namespace tieba
             else
                 label1.Text = "登录失败";
             bd.SignReady();
+            listBox1.Items.Clear();
             foreach(var one in bd.like)
             {
                 listBox1.Items.Add(one);
