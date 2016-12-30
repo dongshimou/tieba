@@ -84,8 +84,7 @@ namespace tieba
 
         private void button2_Click(object sender, EventArgs e)
         {
-            if (bd.SetLoginCode(textBox3.Text.Trim()))
-                label1.Text = bd.error;
+            label1.Text=bd.SetLoginCode(textBox3.Text.Trim());
         }
         private void thread_signall()
         {

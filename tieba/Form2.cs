@@ -36,9 +36,9 @@ namespace tieba
                 }
                 else if (bd.getCodeType() == 4)
                 {
-                    点击验证码 f7 = new 点击验证码(bd.GetPostCode());
+                    Form7 f7 = new Form7(bd.GetPostCode());
                     f7.StartPosition = this.StartPosition;
-                    f7.SendEvent += new 点击验证码.SendCode(GetCode);
+                    f7.SendEvent += new Form7.SendCode(GetCode);
                     f7.ShowDialog(this);
                 }
             }

@@ -218,7 +218,7 @@ namespace tieba
             else
                 return null;
         }
-        public bool SetLoginCode(string input)
+        public string SetLoginCode(string input)
         {
             var url = "https://passport.baidu.com/v2/?checkvcode&";
             verifycode = HttpUtility.HtmlEncode(input);
@@ -240,17 +240,18 @@ namespace tieba
                     ProxyIp = Proxy,
                     ResultCookieType = ResultCookieType.CookieContainer
                 });
-            if (httpResult.StatusCode.Equals(HttpStatusCode.OK))
+            object obj = null;
+            try
             {
-                error = "验证成功";
-                return true;
+                obj = new JavaScriptSerializer().
+                DeserializeObject(httpResult.Html);
             }
-            else
-            {
-                if (httpResult.RedirectUrl.Contains("error"))
-                    error = "验证码出错";
-                return false;
-            }
+            catch { return "网络错误"; }
+            var err=(obj as Dictionary<string, object>)["errInfo"] 
+                as Dictionary<string, object>;
+            if (err["no"].ToString() == "0")
+                return "验证成功";
+            return (err ["msg"]).ToString();
         }
         public Image GetValCode()
         {
@@ -591,9 +592,10 @@ namespace tieba
             else
                 return result;
         }
-        public string UpLoadImage(string path,string refre)
+        public string UpLoadImage(string path, string refre)
         {
             var imageTbs = getImageTbs();
+            //getImageTbs();
             var url = "http://upload.tieba.baidu.com/upload/pic?";
             var nvc = new NameValueCollection
             {
@@ -602,44 +604,87 @@ namespace tieba
                 {"save_yun_album","1" },
             };
             url += HttpHelper.DataToString(nvc);
-            string boundary = "----WebKitFormBoundarykz17xp0q7FAd2CVd";
-            HttpWebRequest webrequest = (HttpWebRequest)WebRequest.Create(url);
-            webrequest.ContentType = "multipart/form-data; boundary=" + boundary;
-            webrequest.Method = "POST";
-            webrequest.ContentLength = 0;
-            webrequest.KeepAlive = true;
-            webrequest.UserAgent = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36";
-            webrequest.Accept = "*/*";
-            webrequest.Referer = "http://tieba.baidu.com/p/"+refre;
-            webrequest.Host = "upload.tieba.baidu.com";
-            webrequest.CookieContainer = cookie;
-            //webrequest.Headers.Add("Cookie: " + cookie);
-            webrequest.Headers.Add("Origin: " + "http://tieba.baidu.com");
+/*
 
+            StringBuilder opsb = new StringBuilder();
+            HttpWebRequest oprequest = (HttpWebRequest)WebRequest.Create(url);
+            oprequest.Method = "OPTIONS";
+            oprequest.Host = "upload.tieba.baidu.com";
+            oprequest.KeepAlive = true;
+            oprequest.CookieContainer = cookie;
+            oprequest.Headers.Add("Access-Control-Request-Method: " + "POST");
+            oprequest.Headers.Add("Origin: " + "http://tieba.baidu.com");
+            oprequest.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:50.0) Gecko/20100101 Firefox/50.0";
+            oprequest.Headers.Add("Access-Control-Request-Headers: ");
+            oprequest.Accept = "* / *";
+            oprequest.Referer = "http://tieba.baidu.com/p/" + refre;
+            var opresponce = oprequest.GetResponse();
+            var h = opresponce.Headers;
+            StreamReader opsr = new StreamReader(opresponce.GetResponseStream());
+            var re = opsr.ReadToEnd();
+*/
+
+            string boundary = "----WebKitFormBoundaryfFFfDOyOEV0oVn3w";
+            HttpWebRequest webrequest = (HttpWebRequest)WebRequest.Create(url);
+            if (Proxy != "ieproxy")
+            {
+                string[] plist = Proxy.Split(':');
+                webrequest.Proxy = new WebProxy(plist[0].Trim(), Convert.ToInt32(plist[1].Trim()));
+            }
+
+            webrequest.Method = "POST";
+            webrequest.Host = "upload.tieba.baidu.com";
+            webrequest.KeepAlive = true;
+            webrequest.Headers.Add("Origin: " + "http://tieba.baidu.com");
+            webrequest.UserAgent = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36";
+            webrequest.ContentType = "multipart/form-data; boundary=" + boundary;
+            webrequest.Accept = "*/*";
+            webrequest.Referer = "http://tieba.baidu.com/p/" + refre;
+            webrequest.Headers.Add("Accept-Encoding: gzip, deflate");
+            webrequest.Headers.Add("Accept-Language: en-US,en;q=0.8");
+            webrequest.CookieContainer = cookie;
+            //百度服务器不支持 Expect: 100-continue,必须设置false.
+            webrequest.ServicePoint.Expect100Continue = false;
 
             StringBuilder sb = new StringBuilder();
             var list = path.Split('\\');
             var filename = list[list.Length - 1];
             list = filename.Split('.');
             var filetype = list[list.Length - 1];
-            sb.Append("\r\n--"+boundary+"\r\n");
-            sb.Append("Content-Disposition: form-data; name=\"file\"; filename=\"" + filename+ "\"\r\n");
-            sb.Append("Content-Type: image/"+filetype+"\r\n\r\n");
-            byte[] postHeaderBytes = Encoding.UTF8.GetBytes(sb.ToString());
-
-            byte[] boundaryBytes = Encoding.UTF8.GetBytes("\r\n--" + boundary + "-–\r\n");
+            sb.Append("--" + boundary + "\r\n");
+            sb.Append("Content-Disposition: form-data; name=\"file\"; filename=\"" + filename + "\"\r\n");
+            sb.Append("Content-Type: image/" + filetype + "\r\n\r\n");
+            var test = sb.ToString();
+            byte[] postHeaderBytes = Encoding.Default.GetBytes(test);
+            byte[] boundaryBytes = Encoding.Default.GetBytes("\r\n--" + boundary + "--\r\n\r\n");
 
             var fs = File.OpenRead(path);
-            byte[] buffer = new byte[fs.Length];
             var length = postHeaderBytes.Length + fs.Length + boundaryBytes.Length;
-
             webrequest.ContentLength = length;
-            fs.Read(buffer, 0, buffer.Length);
+            webrequest.ReadWriteTimeout = 10000;
+
+            byte[] buffer = new byte[length];
+            Array.Copy(postHeaderBytes, buffer, postHeaderBytes.Length);
+            fs.Read(buffer, postHeaderBytes.Length, Convert.ToInt32(fs.Length));
+            Array.Copy(boundaryBytes, 0, buffer, postHeaderBytes.Length + fs.Length, boundaryBytes.Length);
+
             Stream requestStream = webrequest.GetRequestStream();
-            requestStream.Write(postHeaderBytes, 0, postHeaderBytes.Length);
+
+            //requestStream.Write(postHeaderBytes, 0, postHeaderBytes.Length);
             requestStream.Write(buffer, 0, buffer.Length);
-            requestStream.Write(boundaryBytes, 0, boundaryBytes.Length);
-            WebResponse responce = webrequest.GetResponse();
+            //requestStream.Write(boundaryBytes, 0, boundaryBytes.Length);
+            webrequest.Timeout = 10000;
+
+            WebResponse responce = null;
+            try
+            {
+                responce = webrequest.GetResponse();
+                var rrrr = responce.ToString();
+            }
+            catch
+            {
+                return "网络错误";
+            }
             Stream s = responce.GetResponseStream();
             StreamReader sr = new StreamReader(s);
 
@@ -648,7 +693,7 @@ namespace tieba
                 DeserializeObject(HttpResult)
                 as Dictionary<string, object>;
             if (obj["err_no"].ToString() != "0")
-                return "error";
+                return "上传错误";
             var info = obj["info"] as Dictionary<string, object>;
             var pic_id_encode = info["pic_id_encode"].ToString();
             var fullpic_width = info["fullpic_width"].ToString();
@@ -656,30 +701,18 @@ namespace tieba
             var pic_type = info["pic_type"].ToString();
             var width = Convert.ToInt32(fullpic_width);
             var height = Convert.ToInt32(fullpic_height);
-
-            if(width>560)
+            //图片宽最大560
+            if (width > 560)
             {
                 var k = 560.0 / width;
                 width = Convert.ToInt32(width * k);
                 height = Convert.ToInt32(height * k);
             }
-            string result = "[img+pic_type=" + pic_type;
-            result += "+width=" + width + "+height=" + height + "]";
+            string result = "[img pic_type=" + 0;
+            result += " width=" + width + " height=" + height + "]";
             result += "http://imgsrc.baidu.com/forum/pic/item/" + pic_id_encode + ".jpg";
-            result += "[/img]";
+            result += "[/img][br]";
             return result;
-            /*
-             * pic_id_encode:"8d82c1cb39dbb6fd40cf75420024ab18962b3792"
-             * fullpic_width:700
-             * fullpic_height:490
-             * pic_type:1
-             * "[img+pic_type=0+width=32+height=32]
-             * http://imgsrc.baidu.com/forum/pic/item/596da5dde71190efd4b163bbc71b9d16fcfa60e1.jpg
-             * [/img]"
-             max=560;
-             <img class="BDE_Image" pic_type="0" width="560" height="392" 
-             src="http://imgsrc.baidu.com/forum/pic/item/8d82c1cb39dbb6fd40cf75420024ab18962b3792.jpg" pic_ext="jpeg"  > 
-             */
         }
         private string getImageTbs()
         {
@@ -787,11 +820,11 @@ namespace tieba
             return GetAllLike();
             //return GetTopLike();
         }
-        private uint getTime_t()
+        private ulong getTime_t()
         {
             var startTime = new DateTime(1970, 1, 1, 0, 0, 0, 0);
             var currTime = DateTime.Now - startTime;
-            uint time_t = Convert.ToUInt32(Math.Abs(currTime.TotalMilliseconds));
+            var time_t = Convert.ToUInt64(Math.Abs(currTime.TotalMilliseconds));
             return time_t;
         }
         public void Gettid(string address)

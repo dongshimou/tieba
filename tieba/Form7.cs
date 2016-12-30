@@ -10,7 +10,7 @@ using System.Windows.Forms;
 
 namespace tieba
 {
-    public partial class 点击验证码 : Form
+    public partial class Form7 : Form
     {
         private int ClickCount = 0;
         private string vcode = string.Empty;
@@ -22,7 +22,7 @@ namespace tieba
         int xoffset = 0;
         Bitmap[] pick = new Bitmap[4];
         PictureBox CanClick;
-        public 点击验证码(Image m)
+        public Form7(Image m)
         {
             InitializeComponent();
             this.Padding = new Padding(0) ;
@@ -67,11 +67,11 @@ namespace tieba
             ClickCount++;
             if (ClickCount == 4)
             {
-                for(int i=0;i<4;i++)
+                /*for(int i=0;i<4;i++)
                 {
                     string s = i + ".png";
                     pick[i].Save(s);
-                }
+                }*/
                 SendEvent?.Invoke(vcode);
                 vcode = string.Empty;
                 pictureBox1.Image = null;

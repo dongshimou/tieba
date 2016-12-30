@@ -1,6 +1,6 @@
 ﻿namespace tieba
 {
-    partial class 点击验证码
+    partial class Form7
     {
         /// <summary>
         /// Required designer variable.
