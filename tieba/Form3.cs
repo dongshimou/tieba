@@ -21,13 +21,11 @@ namespace tieba
         bool stop = false;
         public Form3(ref baidu ff)
         {
-            
+
             bd = ff;
             InitializeComponent();
             initList();
             readreplay();
-            openFileDialog1.Multiselect = false;
-            textBox1.ReadOnly = true;
         }
         private void initList()
         {
@@ -46,7 +44,7 @@ namespace tieba
 
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            ReplayBox.Text = listBox1.Text.Split(':')[0];
+            SetAddress(listBox1.Text.Split(':')[0]);
         }
 
         private void listBox2_SelectedIndexChanged(object sender, EventArgs e)
@@ -89,7 +87,7 @@ namespace tieba
                     var value = Convert.ToInt32(one.Value);
                     if (value >= minf && value <= maxf)
                     {
-                        ReplayBox.Text = one.Key;
+                        SetAddress(one.Key);
                         var index = r.Next(total);
                         ContentBox.Text = listBox2.Items[index].ToString();
                         replay();
@@ -99,9 +97,11 @@ namespace tieba
                 button3.PerformClick();
             }
         }
-        
+
         private void replay()
         {
+            if (string.IsNullOrEmpty(ContentBox.Text)||
+                string.IsNullOrEmpty (ReplayBox.Text)) return;
             bd.Gettid(ReplayBox.Text);
             if (bd.replay(bd.barname, ContentBox.Text))
             {
@@ -123,10 +123,9 @@ namespace tieba
         }
         private void GetCode(string s)
         {
-            if (bd.SetPostCode(s,bd.getCodeType ()))
+            if (bd.SetPostCode(s, bd.getCodeType()))
             {
-                CodeBox.Text = s;
-                bd.codereplay(s,bd.barname, ContentBox.Text);
+                bd.codereplay(s, bd.barname, ContentBox.Text);
             }
         }
         private void readreplay()
@@ -158,15 +157,28 @@ namespace tieba
             sw.Close();
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        private void button6_Click(object sender, EventArgs e)
         {
-            openFileDialog1.ShowDialog();
-            textBox1.Text = openFileDialog1.FileName;
-            textBox2.Text=bd.UpLoadImage(textBox1.Text,ReplayBox.Text.Trim());
-            if(textBox2.Text.IndexOf("错误")<0)
-            {
-                ContentBox.Text += textBox2.Text;
-            }
+            Form8 f8 = new Form8(ref bd);
+            f8.SendEvent += new Form8.SendContent(addContent);
+            f8.ShowDialog(this);
+        }
+
+        private void button7_Click(object sender, EventArgs e)
+        {
+            listBox2.Items.RemoveAt(listBox2.SelectedIndex);
+        }
+        private void addContent(string content)
+        {
+            listBox2.Items.Add(content);
+        }
+        private void SetAddress(string s)
+        {
+            ReplayBox.Text = "tieba.baidu.com/p/" + s.Trim();
+        }
+        private void close(object sender, FormClosedEventArgs e)
+        {
+            savereplay();
         }
     }
 }
