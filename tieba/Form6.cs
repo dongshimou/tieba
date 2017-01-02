@@ -19,7 +19,6 @@ namespace tieba
             InitializeComponent();
             pictureBox1.Image = m;
         }
-
         private void button1_Click(object sender, EventArgs e)
         {
             SendEvent?.Invoke(textBox1.Text.Trim());

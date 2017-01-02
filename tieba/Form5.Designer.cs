@@ -88,7 +88,7 @@
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Name = "Form5";
-            this.Text = "Form5";
+            this.Text = "添加帐号";
             this.ResumeLayout(false);
             this.PerformLayout();
 

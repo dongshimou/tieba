@@ -36,10 +36,13 @@ namespace tieba
         {
             var index = listBox1.SelectedIndex;
             if (index < 0 || index >= listBox1.Items.Count) return;
-            user[listBox1.Text].Close();
-            user[listBox1.Text].Dispose();
-            user.Remove(listBox1.Text);
-            proxy.Remove(listBox1.Text);
+            if (user.ContainsKey(listBox1.Text))
+            {
+                user[listBox1.Text].Close();
+                user[listBox1.Text].Dispose();
+                user.Remove(listBox1.Text);
+                proxy.Remove(listBox1.Text);
+            }
             listBox1.Items.RemoveAt(index);
             if (index > 0)
                 listBox1.SelectedIndex = index - 1;

@@ -29,32 +29,23 @@
         private void InitializeComponent()
         {
             this.ContentBox = new System.Windows.Forms.TextBox();
-            this.CodeBox = new System.Windows.Forms.TextBox();
             this.button1 = new System.Windows.Forms.Button();
             this.TitleBox = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
-            this.label5 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
-            // textBox2
+            // ContentBox
             // 
             this.ContentBox.Location = new System.Drawing.Point(85, 94);
             this.ContentBox.Multiline = true;
-            this.ContentBox.Name = "textBox2";
-            this.ContentBox.Size = new System.Drawing.Size(240, 105);
+            this.ContentBox.Name = "ContentBox";
+            this.ContentBox.Size = new System.Drawing.Size(240, 157);
             this.ContentBox.TabIndex = 1;
-            // 
-            // textBox3
-            // 
-            this.CodeBox.Location = new System.Drawing.Point(85, 225);
-            this.CodeBox.Name = "textBox3";
-            this.CodeBox.Size = new System.Drawing.Size(240, 21);
-            this.CodeBox.TabIndex = 3;
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(150, 273);
+            this.button1.Location = new System.Drawing.Point(163, 275);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(75, 23);
             this.button1.TabIndex = 4;
@@ -62,10 +53,10 @@
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
-            // textBox4
+            // TitleBox
             // 
             this.TitleBox.Location = new System.Drawing.Point(85, 46);
-            this.TitleBox.Name = "textBox4";
+            this.TitleBox.Name = "TitleBox";
             this.TitleBox.Size = new System.Drawing.Size(240, 21);
             this.TitleBox.TabIndex = 1;
             // 
@@ -87,26 +78,15 @@
             this.label3.TabIndex = 8;
             this.label3.Text = "内容";
             // 
-            // label5
-            // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(26, 228);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(53, 12);
-            this.label5.TabIndex = 10;
-            this.label5.Text = "输入验证";
-            // 
             // Form2
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(380, 319);
-            this.Controls.Add(this.label5);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.TitleBox);
             this.Controls.Add(this.button1);
-            this.Controls.Add(this.CodeBox);
             this.Controls.Add(this.ContentBox);
             this.Name = "Form2";
             this.Text = "发帖";
@@ -117,11 +97,9 @@
 
         #endregion
         private System.Windows.Forms.TextBox ContentBox;
-        private System.Windows.Forms.TextBox CodeBox;
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.TextBox TitleBox;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Label label5;
     }
 }

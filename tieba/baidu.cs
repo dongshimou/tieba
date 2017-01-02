@@ -54,12 +54,6 @@ namespace tieba
         {
             Proxy = "ieproxy";
         }
-
-        public void setProxy(string ip)
-        {
-            Proxy = ip;
-        }
-
         public string Init()
         {
             string url = "https://passport.baidu.com/v2/api/?getapi&";
@@ -149,9 +143,30 @@ namespace tieba
         {
             return Convert.ToInt32(replaycodetype);
         }
+        public Image getEmoji(int i)
+        {
+            string index = i.ToString();
+            if (i < 10)
+                index = "0" + index;
+            var url = "http://tb2.bdstatic.com/tb/editor/images/face/i_f" + index + ".png";
+            var httpResult = new HttpHelper().GetHtml(
+                new HttpItem
+                {
+                    URL = url,
+                    Method = "GET",
+                    CookieContainer = cookie,
+                    ProxyIp = Proxy,
+                    ResultCookieType = ResultCookieType.CookieContainer
+                });
+            if (httpResult.StatusCode.Equals(HttpStatusCode.OK))
+            {
+                return Image.FromStream(new MemoryStream(httpResult.ResultByte));
+            }
+            else
+                return null;
+        }
         public string IsgetcodeString(string username)
         {
-            //https
             var url = "https://passport.baidu.com/v2/api/?logincheck&";
             var nvc = new NameValueCollection
             {
@@ -175,21 +190,19 @@ namespace tieba
                     Timeout = 2000,
                     ResultCookieType = ResultCookieType.CookieContainer
                 });
+            object obj = null;
             try
             {
-                var obj = new JavaScriptSerializer().
+                obj = new JavaScriptSerializer().
                 DeserializeObject(httpResult.Html);
             }
             catch
             {
                 return "操作超时";
             }
-
-            var json1 = new JavaScriptSerializer().
-                DeserializeObject(httpResult.Html)
+            var j1 = (obj as Dictionary<string, object>)["data"]
                 as Dictionary<string, object>;
-            var j1 = json1["data"] as Dictionary<string, object>;
-            if (!j1.ContainsKey("codeString") || j1["codeString"] == null)
+            if (!j1.ContainsKey("codeString") || string.IsNullOrEmpty(j1["codeString"].ToString ()))
                 return "不需要验证码";
             codeString = j1["codeString"].ToString();
             if (j1.ContainsKey("vcodetype"))
@@ -247,11 +260,11 @@ namespace tieba
                 DeserializeObject(httpResult.Html);
             }
             catch { return "网络错误"; }
-            var err=(obj as Dictionary<string, object>)["errInfo"] 
+            var err = (obj as Dictionary<string, object>)["errInfo"]
                 as Dictionary<string, object>;
             if (err["no"].ToString() == "0")
                 return "验证成功";
-            return (err ["msg"]).ToString();
+            return (err["msg"]).ToString();
         }
         public Image GetValCode()
         {
@@ -549,7 +562,7 @@ namespace tieba
             }
             return false;
         }
-        public string Sign(string bar)
+        public bool Sign(string bar)
         {
             var url = "http://tieba.baidu.com/dc/common/tbs";//&
             var result = new HttpHelper().GetHtml(
@@ -581,7 +594,23 @@ namespace tieba
                     ResultCookieType = ResultCookieType.CookieContainer,
                     Postdata = HttpHelper.DataToString(info)
                 });
-            return bar;
+            object obj = null;
+            try
+            {
+                obj = new JavaScriptSerializer().
+             DeserializeObject(result.Html);
+            }
+            catch { return false; }
+            var json=obj as Dictionary<string, object>;
+            if (json["no"].ToString() == "0"||json["no"].ToString ()== "1101")
+                return true;
+            else if(json["error"].ToString ()== "need vcode")
+            {
+                var data = json["data"] as Dictionary<string, object>;
+                replaycodestr = data["captcha_vcode_str"].ToString();
+                replaycodetype = data["captcha_code_type"].ToString();
+            }
+            return false;
         }
         public string SignReady()
         {
@@ -604,25 +633,25 @@ namespace tieba
                 {"save_yun_album","1" },
             };
             url += HttpHelper.DataToString(nvc);
-/*
+            /*
 
-            StringBuilder opsb = new StringBuilder();
-            HttpWebRequest oprequest = (HttpWebRequest)WebRequest.Create(url);
-            oprequest.Method = "OPTIONS";
-            oprequest.Host = "upload.tieba.baidu.com";
-            oprequest.KeepAlive = true;
-            oprequest.CookieContainer = cookie;
-            oprequest.Headers.Add("Access-Control-Request-Method: " + "POST");
-            oprequest.Headers.Add("Origin: " + "http://tieba.baidu.com");
-            oprequest.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:50.0) Gecko/20100101 Firefox/50.0";
-            oprequest.Headers.Add("Access-Control-Request-Headers: ");
-            oprequest.Accept = "* / *";
-            oprequest.Referer = "http://tieba.baidu.com/p/" + refre;
-            var opresponce = oprequest.GetResponse();
-            var h = opresponce.Headers;
-            StreamReader opsr = new StreamReader(opresponce.GetResponseStream());
-            var re = opsr.ReadToEnd();
-*/
+                        StringBuilder opsb = new StringBuilder();
+                        HttpWebRequest oprequest = (HttpWebRequest)WebRequest.Create(url);
+                        oprequest.Method = "OPTIONS";
+                        oprequest.Host = "upload.tieba.baidu.com";
+                        oprequest.KeepAlive = true;
+                        oprequest.CookieContainer = cookie;
+                        oprequest.Headers.Add("Access-Control-Request-Method: " + "POST");
+                        oprequest.Headers.Add("Origin: " + "http://tieba.baidu.com");
+                        oprequest.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:50.0) Gecko/20100101 Firefox/50.0";
+                        oprequest.Headers.Add("Access-Control-Request-Headers: ");
+                        oprequest.Accept = "* / *";
+                        oprequest.Referer = "http://tieba.baidu.com/p/" + refre;
+                        var opresponce = oprequest.GetResponse();
+                        var h = opresponce.Headers;
+                        StreamReader opsr = new StreamReader(opresponce.GetResponseStream());
+                        var re = opsr.ReadToEnd();
+            */
 
             string boundary = "----WebKitFormBoundaryfFFfDOyOEV0oVn3w";
             HttpWebRequest webrequest = (HttpWebRequest)WebRequest.Create(url);
@@ -738,7 +767,10 @@ namespace tieba
         {
             foreach (var one in like)
             {
-                OnSignEvent(Sign(one));
+                if (Sign(one))
+                    OnSignEvent(one);
+                else
+                    OnSignEvent(string.Empty);
                 Thread.Sleep(3000);
             }
             return "签到完成";
@@ -749,11 +781,11 @@ namespace tieba
             request.CookieContainer = cookie;
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             Stream dataStream = response.GetResponseStream();
-            StreamReader reader = new StreamReader(dataStream);
+            /*StreamReader reader = new StreamReader(dataStream);
             string responseFromServer = reader.ReadToEnd();
             reader.Close();
             dataStream.Close();
-            response.Close();
+            response.Close();*/
             for (int i = 1; i < 30; i++)
             {
                 string url = "http://tieba.baidu.com/f/like/mylike?&pn=" + i;
@@ -775,7 +807,7 @@ namespace tieba
                 {
                     var two = one.SelectNodes("td");
                     if (two == null) continue;
-                    like.Add(two[0].FirstChild.InnerText);
+                    like.Add(two[0].InnerText);
                 }
             }
             return true;

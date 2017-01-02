@@ -43,12 +43,11 @@ namespace tieba
                 }
             }
         }
-        private void GetCode(string s)
+        private void GetCode(string code)
         {
-            if (bd.SetPostCode(s, bd.getCodeType()))
+            if (bd.SetPostCode(code, bd.getCodeType()))
             {
-                CodeBox.Text = s;
-                bd.codereplay(s, bd.barname, ContentBox.Text, TitleBox.Text);
+                bd.codereplay(code, bd.barname, ContentBox.Text, TitleBox.Text);
             }
         }
     }

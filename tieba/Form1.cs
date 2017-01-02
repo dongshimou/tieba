@@ -21,8 +21,8 @@ namespace tieba
             this(string.Empty)
         {
         }
-        public Form1(string proxy):
-            this(string.Empty, string.Empty,proxy)
+        public Form1(string proxy) :
+            this(string.Empty, string.Empty, proxy)
         {
         }
 
@@ -30,38 +30,61 @@ namespace tieba
             this(username, password, string.Empty)
         {
         }
-        public Form1(string username,string password,string proxy)
+        public Form1(string username, string password, string proxy)
         {
             InitializeComponent();
-            button2.Text = "1校验验证码";
-            button3.Text = "3一键签到";
-            button4.Text = "4IE打开";
-            button5.Text = "2登录";
-            button7.Text = "5发帖";
-            button8.Text = "6回帖";
+            button3.Text = "一键签到";
+            button4.Text = "IE打开";
+            button5.Text = "登录";
+            button7.Text = "发帖";
+            button8.Text = "回帖";
             //this.ControlBox = false;
-            init(username,password,proxy);
+            init(username, password, proxy);
         }
         public void init(string username, string password, string proxy)
         {
             bd = new baidu();
-            bd.SignEvent += new baidu.SignDelegate(getlabel);
+            bd.SignEvent += new baidu.SignDelegate(setSignLabel);
             if (!string.IsNullOrEmpty(proxy))
-                bd.setProxy(proxy);
+                bd.Proxy = proxy;
             if (!string.IsNullOrEmpty(username))
                 textBox1.Text = username;//"ksbe74906888@163.com"
             if (!string.IsNullOrEmpty(password))
                 textBox2.Text = password;//"zxj654321"
             label1.Text = bd.Init();
-            pictureBox1.Image = null;
-            getcode();
+            getLoginCode();
         }
-        void getlabel(string s)
+        void setSignLabel(string s)
         {
+            if(s==string.Empty)
+            {
+                if (bd.getCodeType() == 1)
+                {
+                    Form6 f6 = new Form6(bd.GetPostCode());
+                    f6.StartPosition = this.StartPosition;
+                    f6.SendEvent += new Form6.SendCode(setSignCode);
+                    f6.ShowDialog(this);
+                }
+                else if (bd.getCodeType() == 4)
+                {
+                    Form7 f7 = new Form7(bd.GetPostCode());
+                    f7.StartPosition = this.StartPosition;
+                    f7.SendEvent += new Form7.SendCode(setSignCode);
+                    f7.ShowDialog(this);
+                }
+            }
+            else
             label1.Text = "正在签到 " + s;
         }
-
-        void getcode()
+        private void setSignCode(string s)
+        {
+            bd.SetPostCode(s,bd.getCodeType ());
+        }
+        private void setLoginCode(string s)
+        {
+            label1.Text = bd.SetLoginCode(s);
+        }
+        private void getLoginCode()
         {
             var username = textBox1.Text.Trim();
             label1.Text = username;
@@ -73,7 +96,11 @@ namespace tieba
             var res = bd.IsgetcodeString(username);
             if (res == string.Empty)
             {
-                pictureBox1.Image = bd.GetLoginCode();
+                //pictureBox1.Image = bd.GetLoginCode();
+                Form6 f6 = new Form6(bd.GetLoginCode());
+                f6.StartPosition = this.StartPosition;
+                f6.SendEvent += new Form6.SendCode(setLoginCode);
+                f6.ShowDialog(this);
             }
             else
             {
@@ -81,14 +108,9 @@ namespace tieba
                 return;
             }
         }
-
-        private void button2_Click(object sender, EventArgs e)
-        {
-            label1.Text=bd.SetLoginCode(textBox3.Text.Trim());
-        }
         private void thread_signall()
         {
-            label1.Text=bd.Signall();
+            label1.Text = bd.Signall();
         }
         private void button3_Click(object sender, EventArgs e)
         {
@@ -97,7 +119,7 @@ namespace tieba
             //多线程
             Control.CheckForIllegalCrossThreadCalls = false;
             Thread t = new Thread(new ThreadStart(thread_signall));
-            t.IsBackground=true;
+            t.IsBackground = true;
             t.Start();
 
             //单线程
@@ -118,7 +140,7 @@ namespace tieba
                 label1.Text = "登录失败";
             bd.SignReady();
             listBox1.Items.Clear();
-            foreach(var one in bd.like)
+            foreach (var one in bd.like)
             {
                 listBox1.Items.Add(one);
             }
@@ -172,20 +194,10 @@ namespace tieba
         {
             textBox4.Text = listBox1.Text;
         }
-        private void pictureBox1_MouseClick(object sender, MouseEventArgs e)
+
+        private void button1_Click(object sender, EventArgs e)
         {
-            var username = textBox1.Text.Trim();
-            label1.Text = username;
-            if (string.IsNullOrEmpty(username))
-            {
-                label1.Text = "用户名为空";
-                return;
-            }
-            var res = bd.IsgetcodeString(username);
-            if (res == string.Empty)
-                pictureBox1.Image = bd.GetLoginCode();
-            else
-                label1.Text = res;
+            init(textBox1.Text.Trim(), textBox2.Text.Trim(), label7.Text.Trim());
         }
     }
 }
