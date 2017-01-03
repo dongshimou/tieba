@@ -17,6 +17,7 @@ namespace tieba
         public baidu bd;
         private Form2 f2;
         private Form3 f3;
+        private bool islogin = false;
         public Form1() :
             this(string.Empty)
         {
@@ -34,15 +35,20 @@ namespace tieba
         {
             InitializeComponent();
             button3.Text = "一键签到";
-            button4.Text = "IE打开";
-            button5.Text = "登录";
             button7.Text = "发帖";
             button8.Text = "回帖";
             //this.ControlBox = false;
             init(username, password, proxy);
+            if (!islogin)
+            {
+                getLoginCode();
+                Login();
+                GetLike();
+            }
         }
         public void init(string username, string password, string proxy)
         {
+            islogin = false;
             bd = new baidu();
             bd.SignEvent += new baidu.SignDelegate(setSignLabel);
             if (!string.IsNullOrEmpty(proxy))
@@ -52,11 +58,18 @@ namespace tieba
             if (!string.IsNullOrEmpty(password))
                 textBox2.Text = password;//"zxj654321"
             label1.Text = bd.Init();
-            getLoginCode();
+            if(bd.ReadCookies (username))
+            {
+                islogin = true;
+                label1.Text = "cookie登录成功";
+                GetLike();
+            }
         }
         void setSignLabel(string s)
         {
-            if(s==string.Empty)
+            var word = s.Split(',');
+            label1.Text = "正在签到 " + word[0];
+            if (word[1]=="fail")
             {
                 if (bd.getCodeType() == 1)
                 {
@@ -73,8 +86,6 @@ namespace tieba
                     f7.ShowDialog(this);
                 }
             }
-            else
-            label1.Text = "正在签到 " + s;
         }
         private void setSignCode(string s)
         {
@@ -114,6 +125,7 @@ namespace tieba
         }
         private void button3_Click(object sender, EventArgs e)
         {
+            if (!checkLogin()) return;
             label1.Text = "后台正在签到，请勿其他操作";
 
             //多线程
@@ -134,10 +146,21 @@ namespace tieba
 
         private void button5_Click(object sender, EventArgs e)
         {
+            Login();
+            GetLike();
+        }
+        private void Login()
+        {
             if (bd.Login(textBox1.Text.Trim(), textBox2.Text.Trim()))
+            {
+                islogin = true;
                 label1.Text = "登录成功";
+            }
             else
                 label1.Text = "登录失败";
+        }
+        private void GetLike()
+        {
             bd.SignReady();
             listBox1.Items.Clear();
             foreach (var one in bd.like)
@@ -145,7 +168,15 @@ namespace tieba
                 listBox1.Items.Add(one);
             }
         }
-
+        private bool checkLogin()
+        {
+            if (islogin) return true;
+            else
+            {
+                label1.Text = "请先登录";
+                return false;
+            }
+        }
         private void button6_Click(object sender, EventArgs e)
         {
             init(string.Empty, string.Empty, string.Empty);
@@ -153,6 +184,7 @@ namespace tieba
 
         private void button7_Click(object sender, EventArgs e)
         {
+            if (!checkLogin()) return;
             bd.barname = textBox4.Text.Trim();
             if (bd.GetBarInfo(bd.barname))
             {
@@ -167,6 +199,7 @@ namespace tieba
 
         private void button8_Click(object sender, EventArgs e)
         {
+            if (!checkLogin()) return;
             bd.barname = textBox4.Text.Trim();
             if (bd.GetBarInfo(bd.barname))
             {
@@ -183,6 +216,8 @@ namespace tieba
             //this.ShowInTaskbar = false;
             //this.WindowState = FormWindowState.Minimized;
             e.Cancel = true;
+            if(islogin)
+            bd.SaveCookies(textBox1.Text.Trim());
             this.Hide();
         }
         public void setProxy(string s)

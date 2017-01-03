@@ -112,7 +112,7 @@
             this.Controls.Add(this.button1);
             this.Controls.Add(this.ContentBox);
             this.Name = "Form8";
-            this.Text = "编辑回复";
+            this.Text = "编辑";
             this.ResumeLayout(false);
             this.PerformLayout();
 

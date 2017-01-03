@@ -23,6 +23,20 @@ namespace tieba
         {
             replay();
         }
+        private void button2_Click(object sender, EventArgs e)
+        {
+            openFileDialog1.ShowDialog();
+            openFileDialog1.Multiselect = false;
+            openFileDialog1.FileOk += new CancelEventHandler(UpLoadImage);
+        }
+        private void UpLoadImage(object sender, CancelEventArgs e)
+        {
+            var result = bd.UpLoadImage(openFileDialog1.FileName, "");
+            if (result.IndexOf("错误") < 0)
+            {
+                ContentBox.Text += result;
+            }
+        }
         private void replay()
         {
             if (bd.replay(bd.barname, ContentBox.Text, TitleBox.Text))

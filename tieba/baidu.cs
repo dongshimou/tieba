@@ -23,6 +23,8 @@ using tieba;
 namespace tieba
 {
     using HtmlAgilityPack;
+    using System.Runtime.Serialization.Formatters.Binary;
+
     public class baidu
     {
         public delegate void SignDelegate(string s);
@@ -202,7 +204,7 @@ namespace tieba
             }
             var j1 = (obj as Dictionary<string, object>)["data"]
                 as Dictionary<string, object>;
-            if (!j1.ContainsKey("codeString") || string.IsNullOrEmpty(j1["codeString"].ToString ()))
+            if (!j1.ContainsKey("codeString") || string.IsNullOrEmpty(j1["codeString"].ToString()))
                 return "不需要验证码";
             codeString = j1["codeString"].ToString();
             if (j1.ContainsKey("vcodetype"))
@@ -601,10 +603,10 @@ namespace tieba
              DeserializeObject(result.Html);
             }
             catch { return false; }
-            var json=obj as Dictionary<string, object>;
-            if (json["no"].ToString() == "0"||json["no"].ToString ()== "1101")
+            var json = obj as Dictionary<string, object>;
+            if (json["no"].ToString() == "0" || json["no"].ToString() == "1101")
                 return true;
-            else if(json["error"].ToString ()== "need vcode")
+            else if (json["error"].ToString() == "need vcode")
             {
                 var data = json["data"] as Dictionary<string, object>;
                 replaycodestr = data["captcha_vcode_str"].ToString();
@@ -634,7 +636,6 @@ namespace tieba
             };
             url += HttpHelper.DataToString(nvc);
             /*
-
                         StringBuilder opsb = new StringBuilder();
                         HttpWebRequest oprequest = (HttpWebRequest)WebRequest.Create(url);
                         oprequest.Method = "OPTIONS";
@@ -768,9 +769,9 @@ namespace tieba
             foreach (var one in like)
             {
                 if (Sign(one))
-                    OnSignEvent(one);
+                    OnSignEvent(one + "," + "success");
                 else
-                    OnSignEvent(string.Empty);
+                    OnSignEvent(one + "," + "fail");
                 Thread.Sleep(3000);
             }
             return "签到完成";
@@ -863,6 +864,37 @@ namespace tieba
         {
             var total = address.Split('/');
             tid = total[total.Length - 1];
+        }
+        public bool ReadCookies(string name)
+        {
+            try
+            {
+                var fs = File.Open(name+".cookie", FileMode.Open);
+                BinaryFormatter formatter = new BinaryFormatter();
+                cookie = (CookieContainer)formatter.Deserialize(fs);
+                fs.Close();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        public bool SaveCookies(string name)
+        {
+            try
+            {
+                var stream = File.Create(name + ".cookie");
+                BinaryFormatter formatter = new BinaryFormatter();
+                formatter.Serialize(stream, cookie);
+                stream.Close();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+            
         }
         public bool GetBarInfo(string bar)
         {

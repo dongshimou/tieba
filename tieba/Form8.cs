@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -26,31 +27,41 @@ namespace tieba
             bd = ff;
             init();
         }
-        void init()
+        public void init(string path = "emoji\\")
         {
-            for (int i = 0; i < key.Length; i++)
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+            emoji.Clear();
+            comboBox1.Items.Clear();
+            for (int i = 1; i <= key.Length; i++)
             {
                 /*Image im = null;
                 try
                 {
-                    im = Image.FromFile("emoji\\"+i + ".png");
+                    im = Image.FromFile(path + i + ".png");
                 }
                 catch
                 {
                     im = bd.getEmoji(i);
-                    im.Save("emoji\\"+i + ".png");
+                    if(im!=null)
+                    im.Save(path + i + ".png");
                 }*/
-                comboBox1.Items.Add(key[i]);
-                emoji.Add(key[i], "[emotion pic_type=1 width=30 height=30]http://tb2.bdstatic.com/tb/editor/images/face/i_f" + i.ToString("D2") + ".png[/emotion]");
+                comboBox1.Items.Add(key[i - 1]);
+                emoji.Add(key[i - 1], "[emotion pic_type=1 width=30 height=30]http://tb2.bdstatic.com/tb/editor/images/face/i_f" + i.ToString("D2") + ".png[/emotion]");
             }
         }
         private void button1_Click(object sender, EventArgs e)
         {
             openFileDialog1.ShowDialog();
-            label1.Text = bd.UpLoadImage(openFileDialog1.FileName, refre);
-            if (label1.Text.IndexOf("错误") < 0)
+            openFileDialog1.Multiselect = false;
+            openFileDialog1.FileOk += new CancelEventHandler(UpLoadImage);
+        }
+        private void UpLoadImage(object sender, CancelEventArgs e)
+        {
+            var result = bd.UpLoadImage(openFileDialog1.FileName, "");
+            if (result.IndexOf("错误") < 0)
             {
-                ContentBox.Text += label1.Text;
+                ContentBox.Text += result;
             }
         }
 
