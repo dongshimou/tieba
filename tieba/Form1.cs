@@ -39,12 +39,7 @@ namespace tieba
             button8.Text = "回帖";
             //this.ControlBox = false;
             init(username, password, proxy);
-            if (!islogin)
-            {
-                getLoginCode();
-                Login();
-                GetLike();
-            }
+
         }
         public void init(string username, string password, string proxy)
         {
@@ -58,10 +53,18 @@ namespace tieba
             if (!string.IsNullOrEmpty(password))
                 textBox2.Text = password;//"zxj654321"
             label1.Text = bd.Init();
-            if(bd.ReadCookies (username))
+            if (bd.ReadCookies(username))
             {
                 islogin = true;
                 label1.Text = "cookie登录成功";
+                GetLike();
+            }
+            if (!islogin)
+            {
+                getLoginCode();
+                if (label1.Text.IndexOf("成功") < 0) return;
+                Login();
+                if (!islogin) return;
                 GetLike();
             }
         }
@@ -69,7 +72,7 @@ namespace tieba
         {
             var word = s.Split(',');
             label1.Text = "正在签到 " + word[0];
-            if (word[1]=="fail")
+            if (word[1] == "fail")
             {
                 if (bd.getCodeType() == 1)
                 {
@@ -89,7 +92,7 @@ namespace tieba
         }
         private void setSignCode(string s)
         {
-            bd.SetPostCode(s,bd.getCodeType ());
+            bd.SetPostCode(s, bd.getCodeType());
         }
         private void setLoginCode(string s)
         {
@@ -216,8 +219,8 @@ namespace tieba
             //this.ShowInTaskbar = false;
             //this.WindowState = FormWindowState.Minimized;
             e.Cancel = true;
-            if(islogin)
-            bd.SaveCookies(textBox1.Text.Trim());
+            if (islogin)
+                bd.SaveCookies(textBox1.Text.Trim());
             this.Hide();
         }
         public void setProxy(string s)
