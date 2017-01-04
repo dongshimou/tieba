@@ -15,15 +15,18 @@ namespace tieba
     public partial class Form3 : Form
     {
         private baidu bd;
+        private RuoKuaiCode rk;
         int minf = 0;
         int maxf = 29;
         Thread t;
-        bool stop = false;
-        public Form3(ref baidu ff)
+        bool stop = true;
+        bool useRuoKuai = false;
+        public Form3(ref baidu ff, ref RuoKuaiCode cc)
         {
-
+            rk = cc;
             bd = ff;
             InitializeComponent();
+            this.StartPosition = FormStartPosition.CenterParent;
             initList();
             readreplay();
         }
@@ -65,14 +68,38 @@ namespace tieba
 
         private void button4_Click(object sender, EventArgs e)
         {
-            Control.CheckForIllegalCrossThreadCalls = false;
-            t = new Thread(new ThreadStart(loop));
-            t.IsBackground = true;
-            t.Start();
+            if (stop)
+            {
+                stop = false;
+                button4.Text = "停止";
+                Control.CheckForIllegalCrossThreadCalls = false;
+                t = new Thread(new ThreadStart(loop));
+                t.IsBackground = true;
+                t.Start();
+            }
+            else
+            {
+                stop = true;
+                button4.Text = "抢楼";
+            }
         }
         private void button5_Click(object sender, EventArgs e)
         {
-            stop = true;
+            if (rk == null)
+            {
+                label3.Text = "若快未登录";
+                return;
+            }
+                if (!useRuoKuai)
+            {
+                useRuoKuai = true;
+                button5.Text = "停止若快";
+            }
+            else
+            {
+                useRuoKuai = false;
+                button5.Text = "使用若快";
+            }
         }
         private void loop()
         {
@@ -100,22 +127,31 @@ namespace tieba
 
         private void replay()
         {
-            if (string.IsNullOrEmpty(ContentBox.Text)||
-                string.IsNullOrEmpty (ReplayBox.Text)) return;
+            if (string.IsNullOrEmpty(ContentBox.Text) ||
+                string.IsNullOrEmpty(ReplayBox.Text)) return;
             bd.Gettid(ReplayBox.Text);
             if (bd.replay(bd.barname, ContentBox.Text))
             {
+                var m = bd.GetPostCode();
+                if (m == null)
+                {
+                    label3.Text = "获取图片失败";
+                    return;
+                }
                 if (bd.getCodeType() == 1)
                 {
-                    Form6 f6 = new Form6(bd.GetPostCode());
-                    f6.StartPosition = this.StartPosition;
-                    f6.SendEvent += new Form6.SendCode(GetCode);
-                    f6.ShowDialog(this);
+                    if (useRuoKuai)
+                        GetCode(rk.UpLoadImage(m));
+                    else
+                    {
+                        Form6 f6 = new Form6(m);
+                        f6.SendEvent += new Form6.SendCode(GetCode);
+                        f6.ShowDialog(this);
+                    }
                 }
                 else if (bd.getCodeType() == 4)
                 {
-                    Form7 f7 = new Form7(bd.GetPostCode());
-                    f7.StartPosition = this.StartPosition;
+                    Form7 f7 = new Form7(m);
                     f7.SendEvent += new Form7.SendCode(GetCode);
                     f7.ShowDialog(this);
                 }
@@ -123,10 +159,20 @@ namespace tieba
         }
         private void GetCode(string s)
         {
+            if (s.IndexOf("错误") >= 0)
+            {
+                label3.Text = s;
+                return;
+            }
             if (bd.SetPostCode(s, bd.getCodeType()))
             {
-                bd.codereplay(s, bd.barname, ContentBox.Text);
+                if (bd.codereplay(s, bd.barname, ContentBox.Text))
+                    label3.Text = "回复成功";
+                else
+                    label3.Text = "回复失败";
             }
+            else
+                label3.Text = "图片验证失败";
         }
         private void readreplay()
         {

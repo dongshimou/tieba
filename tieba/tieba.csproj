@@ -111,6 +111,8 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RSAHelper.cs" />
+    <Compile Include="RuoKuaiCode.cs" />
+    <Compile Include="RuoKuaiHttp.cs" />
     <EmbeddedResource Include="Form0.resx">
       <DependentUpon>Form0.cs</DependentUpon>
     </EmbeddedResource>

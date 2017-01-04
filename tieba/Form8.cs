@@ -24,6 +24,7 @@ namespace tieba
         public Form8(ref baidu ff)
         {
             InitializeComponent();
+            this.StartPosition = FormStartPosition.CenterParent;
             bd = ff;
             init();
         }

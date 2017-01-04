@@ -772,9 +772,9 @@ namespace tieba
                     OnSignEvent(one + "," + "success");
                 else
                     OnSignEvent(one + "," + "fail");
-                Thread.Sleep(3000);
+                Thread.Sleep(5000);
             }
-            return "签到完成";
+            return "over";
         }
         private bool GetAllLike()
         {

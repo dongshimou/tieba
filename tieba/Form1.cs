@@ -17,7 +17,9 @@ namespace tieba
         public baidu bd;
         private Form2 f2;
         private Form3 f3;
+        public RuoKuaiCode rk;
         private bool islogin = false;
+        int failed = 0;
         public Form1() :
             this(string.Empty)
         {
@@ -34,9 +36,12 @@ namespace tieba
         public Form1(string username, string password, string proxy)
         {
             InitializeComponent();
+            this.StartPosition = FormStartPosition.CenterParent;
             button3.Text = "一键签到";
             button7.Text = "发帖";
             button8.Text = "回帖";
+            textBox3.Text = "tiantu007";
+            textBox5.Text = "tiantubigdata";
             //this.ControlBox = false;
             init(username, password, proxy);
 
@@ -77,14 +82,12 @@ namespace tieba
                 if (bd.getCodeType() == 1)
                 {
                     Form6 f6 = new Form6(bd.GetPostCode());
-                    f6.StartPosition = this.StartPosition;
                     f6.SendEvent += new Form6.SendCode(setSignCode);
                     f6.ShowDialog(this);
                 }
                 else if (bd.getCodeType() == 4)
                 {
                     Form7 f7 = new Form7(bd.GetPostCode());
-                    f7.StartPosition = this.StartPosition;
                     f7.SendEvent += new Form7.SendCode(setSignCode);
                     f7.ShowDialog(this);
                 }
@@ -92,7 +95,8 @@ namespace tieba
         }
         private void setSignCode(string s)
         {
-            bd.SetPostCode(s, bd.getCodeType());
+            if (!bd.SetPostCode(s, bd.getCodeType()))
+                failed++;
         }
         private void setLoginCode(string s)
         {
@@ -112,7 +116,6 @@ namespace tieba
             {
                 //pictureBox1.Image = bd.GetLoginCode();
                 Form6 f6 = new Form6(bd.GetLoginCode());
-                f6.StartPosition = this.StartPosition;
                 f6.SendEvent += new Form6.SendCode(setLoginCode);
                 f6.ShowDialog(this);
             }
@@ -124,7 +127,9 @@ namespace tieba
         }
         private void thread_signall()
         {
-            label1.Text = bd.Signall();
+            failed = 0;
+            bd.Signall();
+            label1.Text = "签到完成，失败" + failed + "个";
         }
         private void button3_Click(object sender, EventArgs e)
         {
@@ -192,7 +197,7 @@ namespace tieba
             if (bd.GetBarInfo(bd.barname))
             {
                 f2 = new Form2(ref bd);
-                f2.Show();
+                f2.ShowDialog(this);
             }
             else
             {
@@ -206,8 +211,8 @@ namespace tieba
             bd.barname = textBox4.Text.Trim();
             if (bd.GetBarInfo(bd.barname))
             {
-                f3 = new Form3(ref bd);
-                f3.Show();
+                f3 = new Form3(ref bd,ref rk);
+                f3.Show(this);
             }
             else
             {
@@ -236,6 +241,11 @@ namespace tieba
         private void button1_Click(object sender, EventArgs e)
         {
             init(textBox1.Text.Trim(), textBox2.Text.Trim(), label7.Text.Trim());
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            rk = new RuoKuaiCode(textBox3.Text.Trim(), textBox5.Text.Trim());
         }
     }
 }

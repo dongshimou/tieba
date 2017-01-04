@@ -25,6 +25,7 @@ namespace tieba
         public Form4()
         {
             InitializeComponent();
+            this.StartPosition = FormStartPosition.CenterParent;
             InitList();
         }
 
@@ -35,29 +36,56 @@ namespace tieba
             removeproxy();
         }
 
-        private void InitList()
+        private void InitList(bool cn = true)
         {
-            string url = "https://www.us-proxy.org/";
-            var httpResult = new HttpHelper().GetHtml(
-                new HttpItem()
+            if (!cn)
+            {
+                string url = "https://www.us-proxy.org/";
+                var httpResult = new HttpHelper().GetHtml(
+                    new HttpItem()
+                    {
+                        URL = url,
+                        Method = "GET",
+                    });
+                HtmlDocument html = new HtmlDocument();
+                html.LoadHtml(httpResult.Html);
+                if (html.GetElementbyId("proxylisttable") == null)
                 {
-                    URL = url,
-                    Method = "GET",
-                });
-            HtmlDocument html = new HtmlDocument();
-            html.LoadHtml(httpResult.Html);
-            if (html.GetElementbyId("proxylisttable") == null)
-            {
-                label2.Text = "抓取代理失败";
-                return;
+                    label2.Text = "抓取代理失败";
+                    return;
+                }
+                var node = html.GetElementbyId("proxylisttable").Element("tbody");
+                foreach (var td in node.SelectNodes("tr"))
+                {
+                    var one = td.SelectNodes("td");
+                    var ip = one[0].InnerText;
+                    var port = one[1].InnerText;
+                    GetProxy(ip, port);
+                }
             }
-            var node = html.GetElementbyId("proxylisttable").Element("tbody");
-            foreach (var td in node.SelectNodes("tr"))
+            else
             {
-                var one = td.SelectNodes("td");
-                var ip = one[0].InnerText;
-                var port = one[1].InnerText;
-                GetProxy(ip, port);
+                string url = "http://www.kuaidaili.com/free/";
+                var httpResult = new HttpHelper().GetHtml(
+                    new HttpItem()
+                    {
+                        URL = url,
+                        Method = "GET",
+                    });
+                HtmlDocument html = new HtmlDocument();
+                html.LoadHtml(httpResult.Html);
+                var container = html.GetElementbyId("container");
+                var node = html.DocumentNode;
+                var list=node.SelectSingleNode("/html[1]/body[1]/div[2]/div[1]/div[2]/table[1]/tbody[1]");
+                var t1 = node.FirstChild;
+                var t2 = t1.FirstChild;
+                foreach(var tr in list.SelectNodes("tr"))
+                {
+                    var one = tr.SelectNodes("td");
+                    var ip = one[0].InnerText;
+                    var port = one[1].InnerText;
+                    GetProxy(ip, port);
+                }
             }
         }
 

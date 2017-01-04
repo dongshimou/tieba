@@ -17,6 +17,7 @@ namespace tieba
         {
             bd = ff;
             InitializeComponent();
+            this.StartPosition = FormStartPosition.CenterParent;
         }
 
         private void button1_Click(object sender, EventArgs e)

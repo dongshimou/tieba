@@ -17,6 +17,7 @@ namespace tieba
         public Form6(Image m)
         {
             InitializeComponent();
+            this.StartPosition = FormStartPosition.CenterParent;
             pictureBox1.Image = m;
         }
         private void button1_Click(object sender, EventArgs e)

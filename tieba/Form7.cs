@@ -25,6 +25,7 @@ namespace tieba
         public Form7(Image m)
         {
             InitializeComponent();
+            this.StartPosition = FormStartPosition.CenterParent;
             this.Padding = new Padding(0) ;
             this.AutoScrollMargin = new Size(0, 0);
             pictureBox1.Location = this.Location;

@@ -20,6 +20,7 @@ namespace tieba
         public Form0()
         {
             InitializeComponent();
+            this.StartPosition = FormStartPosition.CenterParent;
             user = new Dictionary<string, Form1>();
             address=new Dictionary<string, bool>();
             proxy=new Dictionary<string, string>();
@@ -29,8 +30,8 @@ namespace tieba
         private void button1_Click(object sender, EventArgs e)
         {
             Form5 f5 = new Form5();
-            f5.Show();
             f5.UserEvent += new Form5.AddUser(adduser);
+            f5.ShowDialog();
         }
         private void button2_Click(object sender, EventArgs e)
         {
@@ -50,8 +51,8 @@ namespace tieba
         private void button3_Click(object sender, EventArgs e)
         {
             Form4 f4 = new Form4();
-            f4.Show();
             f4.ProxyEvent += new Form4.AddProxy(addproxy);
+            f4.ShowDialog();
         }
         private void button4_Click(object sender, EventArgs e)
         {
@@ -79,7 +80,7 @@ namespace tieba
                 proxy[listBox1.Text] = listBox2.Text;
                 user[listBox1.Text].init(obj[0], obj[1], listBox2.Text);
             }
-            user[listBox1.Text].Show();
+            user[listBox1.Text].Show(this);
         }
         private void readuser()
         {
