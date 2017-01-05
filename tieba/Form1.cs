@@ -60,9 +60,9 @@ namespace tieba
             label1.Text = bd.Init();
             if (bd.ReadCookies(username))
             {
-                islogin = true;
                 label1.Text = "cookie登录成功";
-                GetLike();
+                if (GetLike())
+                    islogin = true;
             }
             if (!islogin)
             {
@@ -167,14 +167,16 @@ namespace tieba
             else
                 label1.Text = "登录失败";
         }
-        private void GetLike()
+        private bool GetLike()
         {
-            bd.SignReady();
+            if (bd.SignReady().Contains("错误"))
+                return false;
             listBox1.Items.Clear();
             foreach (var one in bd.like)
             {
                 listBox1.Items.Add(one);
             }
+            return true;
         }
         private bool checkLogin()
         {
@@ -193,8 +195,8 @@ namespace tieba
         private void button7_Click(object sender, EventArgs e)
         {
             if (!checkLogin()) return;
-            bd.barname = textBox4.Text.Trim();
-            if (bd.GetBarInfo(bd.barname))
+            bd.BarName = textBox4.Text.Trim();
+            if (bd.GetBarInfo(bd.BarName))
             {
                 f2 = new Form2(ref bd);
                 f2.ShowDialog(this);
@@ -208,10 +210,10 @@ namespace tieba
         private void button8_Click(object sender, EventArgs e)
         {
             if (!checkLogin()) return;
-            bd.barname = textBox4.Text.Trim();
-            if (bd.GetBarInfo(bd.barname))
+            bd.BarName = textBox4.Text.Trim();
+            if (bd.GetBarInfo(bd.BarName))
             {
-                f3 = new Form3(ref bd,ref rk);
+                f3 = new Form3(ref bd, ref rk);
                 f3.Show(this);
             }
             else

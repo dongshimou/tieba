@@ -33,7 +33,7 @@ namespace tieba
         private string replaycodestr = string.Empty;
         private string replaycodetype = string.Empty;
         public string Proxy { get; set; }
-        public string barname { get; set; }
+        public string BarName { get; set; }
         private string vcodemd5 = string.Empty;
         private string tbs = string.Empty;
         private string fid = string.Empty;
@@ -51,7 +51,8 @@ namespace tieba
         public string error { get; set; }
         public List<string> like = new List<string>();
         public CookieContainer cookie = new CookieContainer();
-        public Dictionary<string, string> barinfo = new Dictionary<string, string>();
+        public Dictionary<string, string> barReplay = new Dictionary<string, string>();
+        public Dictionary<string, string> barTitle = new Dictionary<string, string>();
         public baidu()
         {
             Proxy = "ieproxy";
@@ -99,7 +100,6 @@ namespace tieba
             {
                 var json = new JavaScriptSerializer().
                     DeserializeObject(httpResult.Html);
-
             }
             catch
             {
@@ -382,7 +382,7 @@ namespace tieba
             if (string.IsNullOrEmpty(cookies)) return false;
             return httpResult.StatusCode.Equals(HttpStatusCode.OK);
         }
-        public void GetPSTM()
+        public bool GetPSTM()
         {
             string url = "https://www.baidu.com";
             var result = new HttpHelper().GetHtml(
@@ -395,16 +395,17 @@ namespace tieba
                     ResultCookieType = ResultCookieType.CookieContainer
                 });
             cookies = result.Cookie;
-            if (cookies == null) return;
+            if (cookies == null) return false;
             var split = cookies.Split(';');
             foreach (var str in split)
             {
                 if (str.Contains("PSTM"))
                 {
                     pstm = str.Remove(0, str.IndexOf("PSTM", StringComparison.Ordinal) + 5);
-                    return;
+                    return true;
                 }
             }
+            return false;
         }
         public Image GetPostCode()
         {
@@ -504,7 +505,7 @@ namespace tieba
                 as Dictionary<string, object>;
             return obj["err_code"].ToString() == "0";
         }
-        public bool replay(string bar, string content, string title = "")
+        public string replay(string bar, string content, string title = "")
         {
             replaycodestr = string.Empty;
             var url = string.Empty;
@@ -560,11 +561,74 @@ namespace tieba
                 obj = obj["vcode"] as Dictionary<string, object>;
                 replaycodestr = obj["captcha_vcode_str"].ToString();
                 replaycodetype = obj["captcha_code_type"].ToString();
-                return true;
+                return "需要验证码";
             }
+            else if (obj["err_code"].ToString() == "0")
+            {
+                return "回复成功";
+            }
+            return "回复失败";
+        }
+        public bool ClientSign(string bar)
+        {
+            var url = "http://c.tieba.baidu.com/c/c/forum/sign";
+            string bduss = string.Empty;
+            CookieCollection c = cookie.GetCookies(new Uri("http://www.baidu.com"));
+            foreach (var one in c)
+            {
+                var d = (Cookie)one;
+                if (d.Name == "BDUSS")
+                {
+                    bduss = d.Value;
+                    break;
+                }
+            }
+            var signtbs = getTBS();
+            GetBarInfo(bar);
+            var info = new NameValueCollection
+            {
+                {"BDUSS",bduss },
+                {"fid",fid },
+                {"kw", bar},
+                {"tbs",signtbs },
+            };
+            string sign = "BDUSS=" + bduss + "fid=" + fid + "kw=" + bar + "tbs=" + signtbs;
+            sign = MyMD5(sign + "tiebaclient!!!").ToUpper();
+            info.Add("sign", sign);
+            var result = new HttpHelper().GetHtml(
+                new HttpItem
+                {
+                    URL = url,
+                    Method = "POST",
+                    Postdata = HttpHelper.DataToString(info),
+                    CookieContainer = cookie,
+                    ProxyIp = Proxy,
+                    ResultCookieType = ResultCookieType.CookieContainer
+                });
+            object obj = null;
+            try
+            {
+                obj = new JavaScriptSerializer().
+                DeserializeObject(result.Html);
+            }
+            catch { return false; }
+            var json = obj as Dictionary<string, object>;
+            if (json["error_code"].ToString() == "0"||json["error_code"].ToString ()== "160002")
+                return true;
             return false;
         }
-        public bool Sign(string bar)
+        private string MyMD5(string input)
+        {
+            MD5 md5 = new MD5CryptoServiceProvider();
+            byte[] data = System.Text.Encoding.UTF8.GetBytes(input);
+            byte[] md5data = md5.ComputeHash(data);
+            md5.Clear();
+            string str = "";
+            for (int i = 0; i < md5data.Length; i++)
+                str += md5data[i].ToString("x2").PadLeft(2, '0');
+            return str;
+        }
+        private string getTBS()
         {
             var url = "http://tieba.baidu.com/dc/common/tbs";//&
             var result = new HttpHelper().GetHtml(
@@ -579,14 +643,18 @@ namespace tieba
             var json1 = new JavaScriptSerializer().
                 DeserializeObject(result.Html)
                 as Dictionary<string, object>;
-            var tbs = json1["tbs"] as string;
+            return json1["tbs"] as string;
+        }
+        public bool Sign(string bar)
+        {
+            var signtbs = getTBS();
             var info = new NameValueCollection
             {
                 {"ie","utf-8" },
                 {"kw", bar},
-                {"tbs",tbs },
+                {"tbs",signtbs },
             };
-            result = new HttpHelper().GetHtml(
+            var result = new HttpHelper().GetHtml(
                 new HttpItem
                 {
                     URL = "http://tieba.baidu.com/sign/add",
@@ -616,12 +684,11 @@ namespace tieba
         }
         public string SignReady()
         {
-            var result = string.Empty;
-            GetPSTM();
+            if (!GetPSTM()) return "未知错误";
             if (!GetLike())
-                return error;
+                return "获取关注错误";
             else
-                return result;
+                return "获取关注成功";
         }
         public string UpLoadImage(string path, string refre)
         {
@@ -768,7 +835,8 @@ namespace tieba
         {
             foreach (var one in like)
             {
-                if (Sign(one))
+                //if (Sign(one))//电脑签到
+                if (ClientSign(one))//手机客户端签到
                     OnSignEvent(one + "," + "success");
                 else
                     OnSignEvent(one + "," + "fail");
@@ -869,7 +937,7 @@ namespace tieba
         {
             try
             {
-                var fs = File.Open(name+".cookie", FileMode.Open);
+                var fs = File.Open(name + ".cookie", FileMode.Open);
                 BinaryFormatter formatter = new BinaryFormatter();
                 cookie = (CookieContainer)formatter.Deserialize(fs);
                 fs.Close();
@@ -894,7 +962,7 @@ namespace tieba
             {
                 return false;
             }
-            
+
         }
         public bool GetBarInfo(string bar)
         {
@@ -915,13 +983,14 @@ namespace tieba
                 });
             HtmlDocument html = new HtmlDocument();
             html.LoadHtml(HttpResult.Html);
-            barinfo = new Dictionary<string, string>();
+            barReplay = new Dictionary<string, string>();
+            barTitle = new Dictionary<string, string>();
             var PostList = html.GetElementbyId("thread_list");
             if (PostList == null) return false;
             foreach (var li in PostList.SelectNodes("//li"))
             {
                 var one = li.ChildAttributes("data-field");
-                if (one == null) continue;
+                if (one == null || one.ToList().Count == 0) continue;
                 foreach (var two in one)
                 {
                     var c = two.Value;
@@ -929,7 +998,9 @@ namespace tieba
                     var obj = new JavaScriptSerializer()
                         .DeserializeObject(c) as
                         Dictionary<string, object>;
-                    barinfo.Add(obj["id"].ToString(), obj["reply_num"].ToString());
+                    barReplay.Add(obj["id"].ToString(), obj["reply_num"].ToString());
+                    var a = li.SelectSingleNode(li.XPath + "/div[1]/div[2]/div[1]/div[1]/a[1]");
+                    barTitle.Add(obj["id"].ToString(), a.InnerText);
                 }
             }
             string text = HttpResult.Html.Remove(10000);

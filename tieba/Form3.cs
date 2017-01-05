@@ -33,7 +33,7 @@ namespace tieba
         private void initList()
         {
             listBox1.Items.Clear();
-            foreach (var one in bd.barinfo)
+            foreach (var one in bd.barReplay)
             {
                 var str = one.Key + "    :    " + one.Value;
                 listBox1.Items.Add(str);
@@ -47,7 +47,9 @@ namespace tieba
 
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            SetAddress(listBox1.Text.Split(':')[0]);
+            var address = listBox1.Text.Split(':')[0].Trim();
+            SetAddress(address);
+            SetTitle(bd.barTitle[address]);
         }
 
         private void listBox2_SelectedIndexChanged(object sender, EventArgs e)
@@ -57,7 +59,7 @@ namespace tieba
 
         private void button3_Click(object sender, EventArgs e)
         {
-            bd.GetBarInfo(bd.barname);
+            bd.GetBarInfo(bd.BarName);
             initList();
         }
 
@@ -108,13 +110,14 @@ namespace tieba
             var time = Convert.ToInt32(numericUpDown1.Value) * 1000;
             while (true)
             {
-                foreach (var one in bd.barinfo)
+                foreach (var one in bd.barReplay)
                 {
                     if (stop) return;
                     var value = Convert.ToInt32(one.Value);
                     if (value >= minf && value <= maxf)
                     {
                         SetAddress(one.Key);
+                        SetTitle(bd.barTitle[one.Key]);
                         var index = r.Next(total);
                         ContentBox.Text = listBox2.Items[index].ToString();
                         replay();
@@ -127,10 +130,12 @@ namespace tieba
 
         private void replay()
         {
+            label3.Text = string.Empty;
             if (string.IsNullOrEmpty(ContentBox.Text) ||
                 string.IsNullOrEmpty(ReplayBox.Text)) return;
             bd.Gettid(ReplayBox.Text);
-            if (bd.replay(bd.barname, ContentBox.Text))
+            var result = bd.replay(bd.BarName, ContentBox.Text);
+            if (result.IndexOf ("验证码")>=0)
             {
                 var m = bd.GetPostCode();
                 if (m == null)
@@ -156,6 +161,10 @@ namespace tieba
                     f7.ShowDialog(this);
                 }
             }
+            else
+            {
+                label3.Text = result;
+            }
         }
         private void GetCode(string s)
         {
@@ -166,7 +175,7 @@ namespace tieba
             }
             if (bd.SetPostCode(s, bd.getCodeType()))
             {
-                if (bd.codereplay(s, bd.barname, ContentBox.Text))
+                if (bd.codereplay(s, bd.BarName, ContentBox.Text))
                     label3.Text = "回复成功";
                 else
                     label3.Text = "回复失败";
@@ -220,7 +229,11 @@ namespace tieba
         }
         private void SetAddress(string s)
         {
-            ReplayBox.Text = "tieba.baidu.com/p/" + s.Trim();
+            ReplayBox.Text = "tieba.baidu.com/p/" + s;
+        }
+        private void SetTitle(string s)
+        {
+            label4.Text = s;
         }
         private void close(object sender, FormClosedEventArgs e)
         {

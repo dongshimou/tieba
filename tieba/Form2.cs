@@ -40,7 +40,7 @@ namespace tieba
         }
         private void replay()
         {
-            if (bd.replay(bd.barname, ContentBox.Text, TitleBox.Text))
+            if (bd.replay(bd.BarName, ContentBox.Text, TitleBox.Text).IndexOf ("验证码")>=0)
             {
                 if (bd.getCodeType() == 1)
                 {
@@ -57,12 +57,16 @@ namespace tieba
                     f7.ShowDialog(this);
                 }
             }
+            else
+            {
+
+            }
         }
         private void GetCode(string code)
         {
             if (bd.SetPostCode(code, bd.getCodeType()))
             {
-                bd.codereplay(code, bd.barname, ContentBox.Text, TitleBox.Text);
+                bd.codereplay(code, bd.BarName, ContentBox.Text, TitleBox.Text);
             }
         }
     }
