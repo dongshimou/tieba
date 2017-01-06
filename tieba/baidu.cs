@@ -613,7 +613,7 @@ namespace tieba
             }
             catch { return false; }
             var json = obj as Dictionary<string, object>;
-            if (json["error_code"].ToString() == "0"||json["error_code"].ToString ()== "160002")
+            if (json["error_code"].ToString() == "0" || json["error_code"].ToString() == "160002")
                 return true;
             return false;
         }
@@ -702,24 +702,23 @@ namespace tieba
                 {"save_yun_album","1" },
             };
             url += HttpHelper.DataToString(nvc);
-            /*
-                        StringBuilder opsb = new StringBuilder();
-                        HttpWebRequest oprequest = (HttpWebRequest)WebRequest.Create(url);
-                        oprequest.Method = "OPTIONS";
-                        oprequest.Host = "upload.tieba.baidu.com";
-                        oprequest.KeepAlive = true;
-                        oprequest.CookieContainer = cookie;
-                        oprequest.Headers.Add("Access-Control-Request-Method: " + "POST");
-                        oprequest.Headers.Add("Origin: " + "http://tieba.baidu.com");
-                        oprequest.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:50.0) Gecko/20100101 Firefox/50.0";
-                        oprequest.Headers.Add("Access-Control-Request-Headers: ");
-                        oprequest.Accept = "* / *";
-                        oprequest.Referer = "http://tieba.baidu.com/p/" + refre;
-                        var opresponce = oprequest.GetResponse();
-                        var h = opresponce.Headers;
-                        StreamReader opsr = new StreamReader(opresponce.GetResponseStream());
-                        var re = opsr.ReadToEnd();
-            */
+            StringBuilder opsb = new StringBuilder();
+            HttpWebRequest oprequest = (HttpWebRequest)WebRequest.Create(url);
+            oprequest.Method = "OPTIONS";
+            oprequest.Host = "upload.tieba.baidu.com";
+            oprequest.KeepAlive = true;
+            oprequest.CookieContainer = cookie;
+            oprequest.Headers.Add("Access-Control-Request-Method: " + "POST");
+            oprequest.Headers.Add("Origin: " + "http://tieba.baidu.com");
+            oprequest.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:50.0) Gecko/20100101 Firefox/50.0";
+            oprequest.Headers.Add("Access-Control-Request-Headers: ");
+            oprequest.Accept = "*/*";
+            oprequest.Referer = "http://tieba.baidu.com/p/" + refre;
+            var opresponce = oprequest.GetResponse();
+            //var h = opresponce.Headers;
+            //StreamReader opsr = new StreamReader(opresponce.GetResponseStream());
+            //var re = opsr.ReadToEnd();
+
 
             string boundary = "----WebKitFormBoundaryfFFfDOyOEV0oVn3w";
             HttpWebRequest webrequest = (HttpWebRequest)WebRequest.Create(url);

@@ -107,7 +107,7 @@ namespace tieba
         {
             Random r = new Random();
             var total = listBox2.Items.Count;
-            var time = Convert.ToInt32(numericUpDown1.Value) * 1000;
+            var toint = Convert.ToInt32(numericUpDown1.Value);
             while (true)
             {
                 foreach (var one in bd.barReplay)
@@ -122,6 +122,7 @@ namespace tieba
                         ContentBox.Text = listBox2.Items[index].ToString();
                         replay();
                     }
+                    var time = (toint + r.Next(toint * 2)) * 1000;
                     Thread.Sleep(time);
                 }
                 button3.PerformClick();

@@ -27,6 +27,8 @@ namespace tieba
             this.StartPosition = FormStartPosition.CenterParent;
             bd = ff;
             init();
+            openFileDialog1.Multiselect = false;
+            openFileDialog1.FileOk += new CancelEventHandler(UpLoadImage);
         }
         public void init(string path = "emoji\\")
         {
@@ -53,9 +55,8 @@ namespace tieba
         }
         private void button1_Click(object sender, EventArgs e)
         {
+            
             openFileDialog1.ShowDialog();
-            openFileDialog1.Multiselect = false;
-            openFileDialog1.FileOk += new CancelEventHandler(UpLoadImage);
         }
         private void UpLoadImage(object sender, CancelEventArgs e)
         {

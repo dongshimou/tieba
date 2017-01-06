@@ -75,6 +75,11 @@ namespace tieba
                 HtmlDocument html = new HtmlDocument();
                 html.LoadHtml(httpResult.Html);
                 var container = html.GetElementbyId("container");
+                if (container == null)
+                {
+                    label2.Text = "抓取代理失败";
+                    return;
+                }
                 var node = html.DocumentNode;
                 var list=node.SelectSingleNode("/html[1]/body[1]/div[2]/div[1]/div[2]/table[1]/tbody[1]");
                 var t1 = node.FirstChild;
