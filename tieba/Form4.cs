@@ -26,7 +26,8 @@ namespace tieba
         {
             InitializeComponent();
             this.StartPosition = FormStartPosition.CenterParent;
-            InitList();
+            //InitList();
+            KuaiDaili();
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -34,6 +35,24 @@ namespace tieba
             //https://www.us-proxy.org/
             ProxyEvent?.Invoke(textBox1.Text.Trim());
             removeproxy();
+        }
+        void KuaiDaili()
+        {
+            var url = "http://dev.kuaidaili.com/api/getproxy/?orderid=908370089591763&num=100&b_pcchrome=1&b_pcie=1&b_pcff=1&protocol=1&method=2&an_an=1&an_ha=1&sp1=1&quality=1&sort=1&sep=1";
+            var httpResult = new HttpHelper().GetHtml(
+                    new HttpItem()
+                    {
+                        URL = url,
+                        Method = "GET",
+                    });
+            if (string.IsNullOrEmpty(httpResult.Html)) return;
+            var html = httpResult.Html.Replace("\n","");
+            var list = html.Split('\r');
+            foreach(var one in list)
+            {
+                var address = one.Split(':');
+                GetProxy(address[0], address[1]);
+            }
         }
 
         private void InitList(bool cn = true)
@@ -145,6 +164,43 @@ namespace tieba
             listBox1.Items.RemoveAt(listBox1.SelectedIndex);
             if (listBox1.Items.Count > index) listBox1.SelectedIndex = index;
             else listBox1.SelectedIndex = index - 1;
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            bool[] vis = new bool[listBox1.Items.Count];
+            int count = 0;
+            foreach (var one in listBox1.Items)
+            {
+                var address = one.ToString().Split(':');
+                if (address?.Length != 2) return;
+                var ip = address[0];
+                var port = address[1];
+                bool tcpconnet = false;
+                try
+                {
+                    IPAddress myip = IPAddress.Parse(ip);
+                    IPEndPoint myendport = new IPEndPoint(myip, Convert.ToInt32(port));
+                    TcpClient tcp = new TcpClient();
+                    var task = tcp.ConnectAsync(myip, Convert.ToInt32(port));//异步
+                    task.Wait(1000);
+                    if (task.IsCompleted)
+                        tcpconnet = true;
+                    else
+                        task.Dispose();
+                }
+                catch { }
+                if (tcpconnet == false)
+                    vis[count++] = false;
+                else
+                    vis[count++] = true;
+            }
+            for(int i= vis.Length-1; i>=0;i--)
+            {
+                if (!vis[i])
+                    listBox1.Items.RemoveAt(i);
+            }
+            label2.Text = "全部测试完成";
         }
     }
 }

@@ -30,6 +30,8 @@ namespace tieba
         public delegate void SignDelegate(string s);
 
         public event SignDelegate SignEvent;
+        public string username { get; set; }
+        public string password { get; set; }
         private string replaycodestr = string.Empty;
         private string replaycodetype = string.Empty;
         public string Proxy { get; set; }
@@ -344,6 +346,8 @@ namespace tieba
         }
         public bool Login(string username, string password)
         {
+            this.username = username;
+            this.password = password;
             var url = "https://passport.baidu.com/v2/api/?login";
             var info = new NameValueCollection
             {
@@ -569,11 +573,55 @@ namespace tieba
             }
             return "回复失败";
         }
+        public bool AddLike(string bar)
+        {
+            var url = "http://tieba.baidu.com/f/like/commit/add";
+            var info = new NameValueCollection
+            {
+                {"fid",fid },
+                {"fname",bar },
+                {"uid", username},
+                {"ie","utf-8" },
+                {"tbs",tbs },
+            };
+            var HttpResult = new HttpHelper().GetHtml(
+                new HttpItem
+                {
+                    URL = url,
+                    Method = "POST",
+                    Postdata = HttpHelper.DataToString(info),
+                    CookieContainer = cookie,
+                    ProxyIp = Proxy,
+                    ResultCookieType = ResultCookieType.CookieContainer
+                });
+            object obj = null;
+            try
+            {
+                obj = new JavaScriptSerializer().
+                DeserializeObject(HttpResult.Html);
+            }
+            catch
+            {
+                return false;
+            }
+            var json = obj as Dictionary<string, object>;
+            if (json["no"].ToString() == "0" || json["no"].ToString() == "221")
+                return true;
+            return false;
+        }
         public bool ClientSign(string bar)
         {
             var url = "http://c.tieba.baidu.com/c/c/forum/sign";
             string bduss = string.Empty;
-            CookieCollection c = cookie.GetCookies(new Uri("http://www.baidu.com"));
+            CookieCollection c = null;
+            try
+            {
+                c = cookie.GetCookies(new Uri("http://www.baidu.com"));
+            }
+            catch
+            {
+                return false;
+            }
             foreach (var one in c)
             {
                 var d = (Cookie)one;
@@ -584,6 +632,7 @@ namespace tieba
                 }
             }
             var signtbs = getTBS();
+            if (string.IsNullOrEmpty(signtbs)) return false;
             GetBarInfo(bar);
             var info = new NameValueCollection
             {
@@ -640,14 +689,23 @@ namespace tieba
                     ProxyIp = Proxy,
                     ResultCookieType = ResultCookieType.CookieContainer
                 });
-            var json1 = new JavaScriptSerializer().
-                DeserializeObject(result.Html)
-                as Dictionary<string, object>;
-            return json1["tbs"] as string;
+            object obj = null;
+            try
+            {
+                obj = new JavaScriptSerializer().
+                DeserializeObject(result.Html);
+            }
+            catch
+            {
+                return string.Empty;
+            }
+            var json = obj as Dictionary<string, object>;
+            return json["tbs"] as string;
         }
         public bool Sign(string bar)
         {
             var signtbs = getTBS();
+            if (string.IsNullOrEmpty(signtbs)) return false;
             var info = new NameValueCollection
             {
                 {"ie","utf-8" },
@@ -702,7 +760,7 @@ namespace tieba
                 {"save_yun_album","1" },
             };
             url += HttpHelper.DataToString(nvc);
-            StringBuilder opsb = new StringBuilder();
+            /*StringBuilder opsb = new StringBuilder();
             HttpWebRequest oprequest = (HttpWebRequest)WebRequest.Create(url);
             oprequest.Method = "OPTIONS";
             oprequest.Host = "upload.tieba.baidu.com";
@@ -712,9 +770,9 @@ namespace tieba
             oprequest.Headers.Add("Origin: " + "http://tieba.baidu.com");
             oprequest.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:50.0) Gecko/20100101 Firefox/50.0";
             oprequest.Headers.Add("Access-Control-Request-Headers: ");
-            oprequest.Accept = "*/*";
+            oprequest.Accept = "* / *";
             oprequest.Referer = "http://tieba.baidu.com/p/" + refre;
-            var opresponce = oprequest.GetResponse();
+            var opresponce = oprequest.GetResponse();*/
             //var h = opresponce.Headers;
             //StreamReader opsr = new StreamReader(opresponce.GetResponseStream());
             //var re = opsr.ReadToEnd();
@@ -940,6 +998,7 @@ namespace tieba
                 BinaryFormatter formatter = new BinaryFormatter();
                 cookie = (CookieContainer)formatter.Deserialize(fs);
                 fs.Close();
+                username = name;
                 return true;
             }
             catch

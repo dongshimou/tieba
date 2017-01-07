@@ -20,7 +20,7 @@ namespace tieba
         int maxf = 29;
         Thread t;
         bool stop = true;
-        bool useRuoKuai = false;
+        bool useRuoKuai = true;
         public Form3(ref baidu ff, ref RuoKuaiCode cc)
         {
             rk = cc;
@@ -92,7 +92,7 @@ namespace tieba
                 label3.Text = "若快未登录";
                 return;
             }
-                if (!useRuoKuai)
+            if (!useRuoKuai)
             {
                 useRuoKuai = true;
                 button5.Text = "停止若快";
@@ -136,7 +136,7 @@ namespace tieba
                 string.IsNullOrEmpty(ReplayBox.Text)) return;
             bd.Gettid(ReplayBox.Text);
             var result = bd.replay(bd.BarName, ContentBox.Text);
-            if (result.IndexOf ("验证码")>=0)
+            if (result.IndexOf("验证码") >= 0)
             {
                 var m = bd.GetPostCode();
                 if (m == null)
@@ -147,7 +147,7 @@ namespace tieba
                 if (bd.getCodeType() == 1)
                 {
                     if (useRuoKuai)
-                        GetCode(rk.UpLoadImage(m));
+                        GetCode(rk.UpLoadInputImage(m));
                     else
                     {
                         Form6 f6 = new Form6(m);
@@ -157,9 +157,14 @@ namespace tieba
                 }
                 else if (bd.getCodeType() == 4)
                 {
-                    Form7 f7 = new Form7(m);
-                    f7.SendEvent += new Form7.SendCode(GetCode);
-                    f7.ShowDialog(this);
+                    if (useRuoKuai)
+                        GetCode(rk.UpLoadClickImage(m));
+                    else
+                    {
+                        Form7 f7 = new Form7(m);
+                        f7.SendEvent += new Form7.SendCode(GetCode);
+                        f7.ShowDialog(this);
+                    }
                 }
             }
             else

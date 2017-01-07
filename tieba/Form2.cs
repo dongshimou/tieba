@@ -18,6 +18,8 @@ namespace tieba
             bd = ff;
             InitializeComponent();
             this.StartPosition = FormStartPosition.CenterParent;
+            openFileDialog1.Multiselect = false;
+            openFileDialog1.FileOk += new CancelEventHandler(UpLoadImage);
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -26,9 +28,8 @@ namespace tieba
         }
         private void button2_Click(object sender, EventArgs e)
         {
-            openFileDialog1.ShowDialog();
-            openFileDialog1.Multiselect = false;
-            openFileDialog1.FileOk += new CancelEventHandler(UpLoadImage);
+            openFileDialog1.ShowDialog(this);
+            
         }
         private void UpLoadImage(object sender, CancelEventArgs e)
         {

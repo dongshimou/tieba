@@ -44,7 +44,7 @@ namespace tieba
             textBox5.Text = "tiantubigdata";
             //this.ControlBox = false;
             init(username, password, proxy);
-
+            rk = new RuoKuaiCode(textBox3.Text.Trim(), textBox5.Text.Trim());
         }
         public void init(string username, string password, string proxy)
         {
@@ -198,6 +198,7 @@ namespace tieba
             bd.BarName = textBox4.Text.Trim();
             if (bd.GetBarInfo(bd.BarName))
             {
+                bd.AddLike(bd.BarName);
                 f2 = new Form2(ref bd);
                 f2.ShowDialog(this);
             }
@@ -213,6 +214,7 @@ namespace tieba
             bd.BarName = textBox4.Text.Trim();
             if (bd.GetBarInfo(bd.BarName))
             {
+                bd.AddLike(bd.BarName);
                 f3 = new Form3(ref bd, ref rk);
                 f3.Show(this);
             }
@@ -248,6 +250,11 @@ namespace tieba
         private void button2_Click(object sender, EventArgs e)
         {
             rk = new RuoKuaiCode(textBox3.Text.Trim(), textBox5.Text.Trim());
+        }
+
+        private void button4_Click_1(object sender, EventArgs e)
+        {
+            HttpHelper.StartIe("http://tieba.baidu.com/", bd.cookie);
         }
     }
 }

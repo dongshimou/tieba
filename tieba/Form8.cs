@@ -32,8 +32,8 @@ namespace tieba
         }
         public void init(string path = "emoji\\")
         {
-            if (!Directory.Exists(path))
-                Directory.CreateDirectory(path);
+            /*if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);*/
             emoji.Clear();
             comboBox1.Items.Clear();
             for (int i = 1; i <= key.Length; i++)
@@ -55,8 +55,7 @@ namespace tieba
         }
         private void button1_Click(object sender, EventArgs e)
         {
-            
-            openFileDialog1.ShowDialog();
+            openFileDialog1.ShowDialog(this);
         }
         private void UpLoadImage(object sender, CancelEventArgs e)
         {
