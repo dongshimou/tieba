@@ -856,9 +856,11 @@ namespace tieba
             var width = Convert.ToInt32(fullpic_width);
             var height = Convert.ToInt32(fullpic_height);
             //图片宽最大560
-            if (width > 560)
+            const int WMAX = 128;
+            //表情包设置为128
+            if (width > WMAX)
             {
-                var k = 560.0 / width;
+                var k = WMAX*1.0 / width;
                 width = Convert.ToInt32(width * k);
                 height = Convert.ToInt32(height * k);
             }
@@ -1043,9 +1045,9 @@ namespace tieba
             html.LoadHtml(HttpResult.Html);
             barReplay = new Dictionary<string, string>();
             barTitle = new Dictionary<string, string>();
-            var PostList = html.GetElementbyId("thread_list");
-            if (PostList == null) return false;
-            foreach (var li in PostList.SelectNodes("//li"))
+            var postList = html.GetElementbyId("thread_list");
+            if (postList == null) return false;
+            foreach (var li in postList.SelectNodes("//li"))
             {
                 var one = li.ChildAttributes("data-field");
                 if (one == null || one.ToList().Count == 0) continue;
@@ -1058,11 +1060,24 @@ namespace tieba
                         Dictionary<string, object>;
                     barReplay.Add(obj["id"].ToString(), obj["reply_num"].ToString());
                     var a = li.SelectSingleNode(li.XPath + "/div[1]/div[2]/div[1]/div[1]/a[1]");
+<<<<<<< HEAD
                     if(a!=null)
+=======
+                    if(a==null)
+                        a = li.SelectSingleNode(li.XPath + "/div[2]/div[2]/div[1]/div[1]/a[1]");
+>>>>>>> 3c0ba29a802c128e45d831527f7469f76223048a
                     barTitle.Add(obj["id"].ToString(), a.InnerText);
                 }
             }
-            string text = HttpResult.Html.Remove(10000);
+            string text = string.Empty;
+            try
+            {
+                text = HttpResult.Html.Remove(10000);
+            }
+            catch
+            {
+                return false;
+            }
             //(?<=script).*(?=script)
             Regex rx = new Regex(@"(?<=tbs).*(\})",
           RegexOptions.Compiled | RegexOptions.IgnoreCase);
