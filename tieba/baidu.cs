@@ -1058,6 +1058,7 @@ namespace tieba
                         Dictionary<string, object>;
                     barReplay.Add(obj["id"].ToString(), obj["reply_num"].ToString());
                     var a = li.SelectSingleNode(li.XPath + "/div[1]/div[2]/div[1]/div[1]/a[1]");
+                    if(a!=null)
                     barTitle.Add(obj["id"].ToString(), a.InnerText);
                 }
             }
