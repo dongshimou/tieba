@@ -26,8 +26,8 @@ namespace tieba
         {
             InitializeComponent();
             this.StartPosition = FormStartPosition.CenterParent;
-            //InitList();
-            KuaiDaili();
+            InitList();
+            //KuaiDaili("978379447402888");
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -36,9 +36,10 @@ namespace tieba
             ProxyEvent?.Invoke(textBox1.Text.Trim());
             removeproxy();
         }
-        void KuaiDaili()
+        void KuaiDaili(string order)
         {
-            var url = "http://dev.kuaidaili.com/api/getproxy/?orderid=908370089591763&num=100&b_pcchrome=1&b_pcie=1&b_pcff=1&protocol=1&method=2&an_an=1&an_ha=1&sp1=1&quality=1&sort=1&sep=1";
+            var url = "http://dev.kuaidaili.com/api/getproxy/?orderid="+order
+                +"&num=100&b_pcchrome=1&b_pcie=1&b_pcff=1&protocol=1&method=2&an_an=1&an_ha=1&sp1=1&quality=1&sort=1&sep=1";
             var httpResult = new HttpHelper().GetHtml(
                     new HttpItem()
                     {

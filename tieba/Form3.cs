@@ -170,6 +170,8 @@ namespace tieba
             else
             {
                 label3.Text = result;
+                if(label3.Text.IndexOf("成功")>=0)
+                    saveUserReplay();
             }
         }
         private void GetCode(string s)
@@ -182,12 +184,26 @@ namespace tieba
             if (bd.SetPostCode(s, bd.getCodeType()))
             {
                 if (bd.codereplay(s, bd.BarName, ContentBox.Text))
+                {
                     label3.Text = "回复成功";
+                    saveUserReplay();
+                }
                 else
                     label3.Text = "回复失败";
             }
             else
                 label3.Text = "图片验证失败";
+        }
+
+        private void saveUserReplay()
+        {
+            string path = "replay/";
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+            path+=bd.username + ".txt";
+            var sw = new StreamWriter(path, true, Encoding.UTF8);
+            sw.WriteLine(ReplayBox.Text);
+            sw.Close();
         }
         private void readreplay()
         {
